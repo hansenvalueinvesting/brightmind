@@ -1,21 +1,26 @@
 // ============================================================
-// Coach view — add players by email, see team-wide stats, and
-// drill into any individual player.
+// Coach dashboard — add players by email, team-wide stats + charts,
+// and per-player drill-down. Chart/stats helpers live in charts.js.
 //
 // Data access:
-//  - get_my_players()  RPC  -> roster + identity (email/username from auth)
-//  - add_player_by_email()  RPC -> link a player by email
-//  - logs are read directly; a row-level-security policy lets a coach
-//    select the logs of players they're linked to.
+//  - get_my_players()  RPC -> roster + identity (email/username from auth)
+//  - add_player_by_email() RPC -> link a player by email
+//  - logs are read directly; an RLS policy lets a coach select the logs
+//    of players they're linked to.
 // ============================================================
 
 let session = null;
 let players = [];          // [{ player_id, email, username, streak_count, last_log_date }]
-let logsByPlayer = {};     // player_id -> logs[] (ascending by date)
+let logsByPlayer = {};     // player_id -> logs[] (ascending)
 let allPlayerLogs = [];    // every fetched log row, flat
-let teamMode = "week";     // "week" | "all"
-let selected = null;       // selected player_id for the detail panel
-let detailChart = null;
+let selected = null;       // selected player_id
+
+let teamMode = "week";     // team summary: "week" | "all"
+let teamTrendRange = "30"; // team trend chart: "30" | "all"
+let detailRange = "30";    // player trend chart: "30" | "all"
+let detailRecent = "7";    // player entries: "7" | "all"
+
+let teamTrend = null, teamCompare = null, detailChart = null, detailScatter = null;
 
 (async () => {
   session = await requireSession();
@@ -52,11 +57,12 @@ async function loadPlayers() {
     for (const l of allPlayerLogs) (logsByPlayer[l.user_id] ||= []).push(l);
   }
 
-  // Drop a stale selection if that player was removed.
   if (selected && !players.some(p => p.player_id === selected)) selected = null;
 
   renderRoster();
   renderTeam();
+  renderTeamTrend();
+  renderTeamCompare();
   renderDetail();
 }
 
@@ -86,26 +92,62 @@ async function removePlayer(id) {
   await loadPlayers();
 }
 
-// ---------- Team overview ----------
+// ---------- Team summary (numbers) ----------
 function setTeamMode(mode) {
   teamMode = mode;
-  document.querySelectorAll("#team-toggle .toggle-btn")
-    .forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  toggleActive("#team-toggle", mode, "mode");
   renderTeam();
 }
 
 function renderTeam() {
   document.getElementById("team-count").textContent = players.length;
   const el = document.getElementById("team-stats");
-  const set = teamMode === "week" ? weekSlice(allPlayerLogs) : allPlayerLogs;
+  const set = teamMode === "week" ? rangeSlice(allPlayerLogs, 7) : allPlayerLogs;
   const s = summarize(set);
-  if (!s) {
-    el.innerHTML = teamMode === "week"
-      ? "No sessions logged by your players this week."
-      : "No sessions logged by your players yet.";
-    return;
-  }
-  el.innerHTML = statRows(s);
+  el.innerHTML = s ? statRows(s)
+    : (teamMode === "week"
+        ? "No sessions logged by your players this week."
+        : "No sessions logged by your players yet.");
+}
+
+// ---------- Team trends (avg of every metric across the team) ----------
+function setTeamTrendRange(range) {
+  teamTrendRange = range;
+  toggleActive("#team-trend-toggle", range, "range");
+  renderTeamTrend();
+}
+
+function renderTeamTrend() {
+  const box = document.getElementById("team-trend-box");
+  if (teamTrend) { teamTrend.destroy(); teamTrend = null; }
+
+  const set = teamTrendRange === "all" ? allPlayerLogs : rangeSlice(allPlayerLogs, 30);
+  if (!set.length) { box.innerHTML = '<div class="empty">No player logs to chart yet.</div>'; return; }
+
+  box.innerHTML = '<canvas id="teamTrendChart"></canvas>';
+  const { dates, series } = teamAverageSeries(set);
+  teamTrend = multiLineChart("teamTrendChart", dates.map(d => d.slice(5)), k => series[k]);
+}
+
+// ---------- Player comparison (grouped bars) ----------
+function renderTeamCompare() {
+  const box = document.getElementById("team-compare-box");
+  if (teamCompare) { teamCompare.destroy(); teamCompare = null; }
+
+  if (!players.length) { box.innerHTML = '<div class="empty">Add players to compare them.</div>'; return; }
+
+  box.innerHTML = '<canvas id="teamCompareChart"></canvas>';
+  const labels = players.map(p => p.username || p.email);
+  const pick = [
+    ["confidence", "Confidence", "#ffb000"],
+    ["focus", "Focus", "#3fb950"],
+    ["sleep_quality", "Sleep quality", "#58a6ff"],
+  ];
+  const datasets = pick.map(([key, label, color]) => ({
+    label, backgroundColor: color,
+    data: players.map(p => +avgOf(logsByPlayer[p.player_id] || [], key).toFixed(1)),
+  }));
+  teamCompare = barChart("teamCompareChart", labels, datasets, { yMax: 10 });
 }
 
 // ---------- Roster ----------
@@ -116,8 +158,7 @@ function renderRoster() {
     return;
   }
   el.innerHTML = players.map(p => {
-    const logs = logsByPlayer[p.player_id] || [];
-    const wk = weekSlice(logs).length;
+    const wk = rangeSlice(logsByPlayer[p.player_id] || [], 7).length;
     const name = p.username || p.email;
     const last = p.last_log_date || "never";
     return `
@@ -139,7 +180,7 @@ function renderRoster() {
 // ---------- Individual detail ----------
 function selectPlayer(id) {
   selected = id;
-  renderRoster();   // re-highlight the selected row
+  renderRoster();
   renderDetail();
   document.getElementById("detail-panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -157,11 +198,52 @@ function renderDetail() {
   document.getElementById("detail-stats").innerHTML =
     s ? statRows(s) : '<div class="empty">No logs yet for this player.</div>';
 
-  renderDetailChart();
+  renderDetailTrend();
+  renderDetailScatter();
+  renderDetailRecent();
+}
 
-  const recent = [...logs].reverse().slice(0, 7);
-  document.getElementById("detail-recent").innerHTML = recent.length
-    ? recent.map(l => `
+function setDetailRange(range) {
+  detailRange = range;
+  toggleActive("#detail-trend-toggle", range, "range");
+  renderDetailTrend();
+}
+
+function renderDetailTrend() {
+  const box = document.getElementById("detail-trend-box");
+  if (detailChart) { detailChart.destroy(); detailChart = null; }
+
+  const logs = logsByPlayer[selected] || [];
+  const set = detailRange === "all" ? logs : rangeSlice(logs, 30);
+  if (!set.length) { box.innerHTML = '<div class="empty">No logs to chart.</div>'; return; }
+
+  box.innerHTML = '<canvas id="detailChart"></canvas>';
+  detailChart = multiLineChart("detailChart", set.map(l => l.log_date.slice(5)), k => set.map(l => l[k]));
+}
+
+function renderDetailScatter() {
+  const box = document.getElementById("detail-scatter-box");
+  if (detailScatter) { detailScatter.destroy(); detailScatter = null; }
+
+  box.innerHTML = '<canvas id="detailScatter"></canvas>';
+  detailScatter = sleepPerfScatter("detailScatter", logsByPlayer[selected] || []);
+  if (!detailScatter) {
+    box.innerHTML = '<div class="empty">Need 3+ days with sleep recorded to chart this.</div>';
+  }
+}
+
+function setDetailRecent(mode) {
+  detailRecent = mode;
+  toggleActive("#detail-recent-toggle", mode, "mode");
+  renderDetailRecent();
+}
+
+function renderDetailRecent() {
+  const el = document.getElementById("detail-recent");
+  const ordered = [...(logsByPlayer[selected] || [])].reverse();
+  const set = detailRecent === "all" ? ordered : ordered.slice(0, 7);
+  el.innerHTML = set.length
+    ? set.map(l => `
         <div class="log-row">
           <span class="log-date">${esc(l.log_date)}</span>
           <span class="log-type">${esc(l.session_type)}</span>
@@ -170,78 +252,7 @@ function renderDetail() {
     : '<div class="empty">No entries.</div>';
 }
 
-function renderDetailChart() {
-  if (!selected) return;
-  const logs = logsByPlayer[selected] || [];
-  const since = new Date(); since.setDate(since.getDate() - 30);
-  const recent = logs.filter(l => new Date(l.log_date + "T00:00:00") >= since);
-
-  const box = document.getElementById("detail-chartbox");
-  const empty = document.getElementById("detail-empty");
-
-  if (detailChart) { detailChart.destroy(); detailChart = null; }
-
-  if (!recent.length) {
-    box.classList.add("section-hidden");
-    empty.classList.remove("section-hidden");
-    return;
-  }
-  box.classList.remove("section-hidden");
-  empty.classList.add("section-hidden");
-
-  const metric = document.getElementById("detail-metric").value;
-  detailChart = new Chart(document.getElementById("detailChart"), {
-    type: "line",
-    data: {
-      labels: recent.map(l => l.log_date.slice(5)),
-      datasets: [{
-        data: recent.map(l => l[metric]),
-        borderColor: "#ffb000",
-        backgroundColor: "rgba(255,176,0,0.08)",
-        borderWidth: 2, tension: 0.3, fill: true,
-        pointRadius: 3, pointBackgroundColor: "#ffb000",
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { min: 0, max: 10, grid: { color: "#2a323d" }, ticks: { color: "#8b96a5" } },
-        x: { grid: { color: "#2a323d" }, ticks: { color: "#8b96a5", maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } }
-      }
-    }
-  });
-}
-
-// ---------- Shared helpers ----------
-function weekSlice(logs) {
-  const since = new Date(); since.setDate(since.getDate() - 7);
-  return logs.filter(l => new Date(l.log_date + "T00:00:00") >= since);
-}
-
-function summarize(logs) {
-  if (!logs.length) return null;
-  const avg = k => {
-    const vals = logs.map(l => l[k]).filter(v => v != null);
-    return vals.length ? (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1) : "–";
-  };
-  const mins = logs.reduce((s, l) => s + (l.duration_minutes || 0), 0);
-  return {
-    sessions: logs.length,
-    time: `${Math.floor(mins / 60)}h ${mins % 60}m`,
-    confidence: avg("confidence"),
-    sleep: avg("sleep_hours"),
-  };
-}
-
-function statRows(s) {
-  return `
-    <div class="log-row"><span class="log-date">Sessions</span><span>${s.sessions}</span></div>
-    <div class="log-row"><span class="log-date">Total time</span><span>${s.time}</span></div>
-    <div class="log-row"><span class="log-date">Avg confidence</span><span>${s.confidence}</span></div>
-    <div class="log-row"><span class="log-date">Avg sleep</span><span>${s.sleep}h</span></div>`;
-}
-
+// ---------- Small local helpers ----------
 function setMsg(id, text, kind) {
   const el = document.getElementById(id);
   el.textContent = text;

@@ -44,22 +44,23 @@
 
   <div class="panel">
     <div class="panel-title">
-      <span style="flex:1;">Trend — last 30 days</span>
-      <select id="metric" onchange="renderChart()" style="width:auto; padding:6px 10px; font-size:13px;">
-        <option value="confidence">Confidence</option>
-        <option value="focus">Focus</option>
-        <option value="stress">Stress</option>
-        <option value="sleep_quality">Sleep quality</option>
-        <option value="soreness">Soreness</option>
-        <option value="intensity">Intensity</option>
-        <option value="mood_after">Mood after</option>
-      </select>
+      <span style="flex:1;">Trends</span>
+      <div class="toggle" id="trend-toggle">
+        <button class="toggle-btn active" data-range="30" onclick="setTrendRange('30')">30 days</button>
+        <button class="toggle-btn" data-range="all" onclick="setTrendRange('all')">All time</button>
+      </div>
     </div>
-    <div class="chart-box"><canvas id="trendChart"></canvas></div>
+    <div class="chart-box tall" id="trend-box"><canvas id="trendChart"></canvas></div>
   </div>
 
   <div class="panel">
-    <div class="panel-title">Last 7 entries</div>
+    <div class="panel-title">
+      <span style="flex:1;">Recent entries</span>
+      <div class="toggle" id="recent-toggle">
+        <button class="toggle-btn active" data-mode="7" onclick="setRecentMode('7')">Last 7</button>
+        <button class="toggle-btn" data-mode="all" onclick="setRecentMode('all')">All</button>
+      </div>
+    </div>
     <div id="recent"></div>
   </div>
 </div>
@@ -67,6 +68,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
+<script src="js/charts.js"></script>
 <script src="js/dashboard.js"></script>
 </body>
 </html>
