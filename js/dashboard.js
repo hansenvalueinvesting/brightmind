@@ -4,6 +4,8 @@
 
 let session = null;
 let logs = [];          // last 30 days, ascending by date
+let allLogs = null;     // every log, lazily fetched for the "All time" summary
+let statsMode = "week"; // "week" | "all"
 let chart = null;
 
 (async () => {
@@ -12,7 +14,7 @@ let chart = null;
   await Promise.all([loadProfile(), loadLogs()]);
   renderChart();
   renderRecent();
-  renderWeek();
+  renderStats();
 })();
 
 async function loadProfile() {
@@ -80,15 +82,43 @@ function renderRecent() {
   `).join("");
 }
 
-function renderWeek() {
+function setStatsMode(mode) {
+  statsMode = mode;
+  document.querySelectorAll("#stats-toggle .toggle-btn")
+    .forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  renderStats();
+}
+
+async function renderStats() {
   const el = document.getElementById("week-stats");
-  const since = new Date(); since.setDate(since.getDate() - 7);
-  const wk = logs.filter(l => new Date(l.log_date + "T00:00:00") >= since);
-  if (!wk.length) { el.innerHTML = "No sessions logged this week yet."; return; }
-  const avg = k => (wk.reduce((s, l) => s + (l[k] || 0), 0) / wk.length).toFixed(1);
-  const mins = wk.reduce((s, l) => s + (l.duration_minutes || 0), 0);
+  let set;
+
+  if (statsMode === "week") {
+    const since = new Date(); since.setDate(since.getDate() - 7);
+    set = logs.filter(l => new Date(l.log_date + "T00:00:00") >= since);
+  } else {
+    // "All time" needs the full history, not just the 30-day window the chart uses.
+    if (!allLogs) {
+      el.innerHTML = "Loading…";
+      const { data } = await db.from("logs").select("*").eq("user_id", session.user.id);
+      allLogs = data || [];
+    }
+    set = allLogs;
+  }
+
+  if (!set.length) {
+    el.innerHTML = statsMode === "week" ? "No sessions logged this week yet." : "No sessions logged yet.";
+    return;
+  }
+
+  // Average over rows that actually have the value (skip nulls / rest days).
+  const avg = k => {
+    const vals = set.map(l => l[k]).filter(v => v != null);
+    return vals.length ? (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1) : "–";
+  };
+  const mins = set.reduce((s, l) => s + (l.duration_minutes || 0), 0);
   el.innerHTML = `
-    <div class="log-row"><span class="log-date">Sessions</span><span>${wk.length}</span></div>
+    <div class="log-row"><span class="log-date">Sessions</span><span>${set.length}</span></div>
     <div class="log-row"><span class="log-date">Total time</span><span>${Math.floor(mins/60)}h ${mins%60}m</span></div>
     <div class="log-row"><span class="log-date">Avg confidence</span><span>${avg("confidence")}</span></div>
     <div class="log-row"><span class="log-date">Avg sleep</span><span>${avg("sleep_hours")}h</span></div>

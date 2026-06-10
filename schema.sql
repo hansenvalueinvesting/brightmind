@@ -10,11 +10,16 @@
 create table public.profiles (
   id            uuid primary key references auth.users(id) on delete cascade,
   role          text not null default 'player',
+  username      text,                 -- display name, editable on the settings page
   consent_at    timestamptz,          -- timestamp consent checkbox was accepted
   streak_count  integer not null default 0,
   last_log_date date,                 -- last calendar day a log was submitted
   created_at    timestamptz not null default now()
 );
+
+-- Migration for projects created before `username` existed:
+-- safe to run on a fresh DB too (no-op if the column already exists).
+alter table public.profiles add column if not exists username text;
 
 -- ----------------------------------------------------------------
 -- LOGS: one row per daily log entry.

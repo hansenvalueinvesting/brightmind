@@ -55,12 +55,14 @@ index.html        Screen 1 — sign up / log in (hard consent gate)
 log.html          Screen 2 — daily log (training / mental / recovery / tournament)
 dashboard.html    Screen 3 — streak, 30-day trend chart, last 7 entries
 insights.html     Screen 4 — sleep vs. performance scatter + correlation
+settings.html     Settings — change username, email, and password
 css/style.css     shared styles
-js/supabase.js    DB client + config (YOUR KEYS GO HERE)
+js/supabase.js    DB client + config (YOUR KEYS GO HERE) + top-bar identity chip
 js/auth.js        signup/login/consent
 js/log.js         form submit + streak logic
-js/dashboard.js   streak, trend chart, recent entries
+js/dashboard.js   streak, trend chart, recent entries, week/all-time summary
 js/insights.js    sleep-performance correlation
+js/settings.js    update username / email / password
 schema.sql        run once in Supabase SQL editor
 ```
 
@@ -68,4 +70,7 @@ schema.sql        run once in Supabase SQL editor
 - **Consent** is a hard gate: no account is created without the checkbox. The acceptance time is stored as `consent_at` on the user's profile.
 - **Streak**: +1 for a consecutive calendar day, unchanged if you log twice in one day, resets to 1 after a missed day. Stored on the profile as `streak_count` / `last_log_date`.
 - **Tournament section** appears when **Session type = Match play**.
+- **Top bar** shows the username and role you're signed in as (falls back to your email until you set a username on the Settings page).
+- **Summary box** on the dashboard toggles between **This week** and **All time** totals.
+- **Settings** lets you change your username, email, and password. Changing your email may require confirmation depending on your Supabase email settings.
 - **Insights** uses your match-day performance rating when available, otherwise "mood after" as a general performance proxy, so the chart is useful before your first logged match. It needs 3+ days with sleep recorded.
