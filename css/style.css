@@ -252,4 +252,5 @@ input[type=range]::-moz-range-thumb {
 .row-x:hover { border-color: var(--red); color: var(--red); }
 @media (max-width: 480px) { .player-row .player-meta { display: none; } }
 .chart-box { position: relative; height: 280px; }
+.chart-box.tall { height: 340px; }
 .empty { color: var(--ink-dim); text-align: center; padding: 30px; font-size: 14px; }

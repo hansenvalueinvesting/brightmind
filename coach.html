@@ -46,6 +46,24 @@
     <div id="team-stats" class="hint">Loading…</div>
   </div>
 
+  <!-- TEAM TRENDS -->
+  <div class="panel">
+    <div class="panel-title">
+      <span style="flex:1;">Team trends · average across players</span>
+      <div class="toggle" id="team-trend-toggle">
+        <button class="toggle-btn active" data-range="30" onclick="setTeamTrendRange('30')">30 days</button>
+        <button class="toggle-btn" data-range="all" onclick="setTeamTrendRange('all')">All time</button>
+      </div>
+    </div>
+    <div class="chart-box tall" id="team-trend-box"><canvas id="teamTrendChart"></canvas></div>
+  </div>
+
+  <!-- PLAYER COMPARISON -->
+  <div class="panel">
+    <div class="panel-title">Player comparison · averages (all time)</div>
+    <div class="chart-box tall" id="team-compare-box"><canvas id="teamCompareChart"></canvas></div>
+  </div>
+
   <!-- ROSTER -->
   <div class="panel">
     <div class="panel-title">Your players</div>
@@ -62,21 +80,24 @@
     <div id="detail-stats" class="hint"></div>
 
     <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
-      <span style="flex:1;">Trend — last 30 days</span>
-      <select id="detail-metric" onchange="renderDetailChart()" style="width:auto; padding:6px 10px; font-size:13px;">
-        <option value="confidence">Confidence</option>
-        <option value="focus">Focus</option>
-        <option value="stress">Stress</option>
-        <option value="sleep_quality">Sleep quality</option>
-        <option value="soreness">Soreness</option>
-        <option value="intensity">Intensity</option>
-        <option value="mood_after">Mood after</option>
-      </select>
+      <span style="flex:1;">Trends</span>
+      <div class="toggle" id="detail-trend-toggle">
+        <button class="toggle-btn active" data-range="30" onclick="setDetailRange('30')">30 days</button>
+        <button class="toggle-btn" data-range="all" onclick="setDetailRange('all')">All time</button>
+      </div>
     </div>
-    <div class="chart-box" id="detail-chartbox"><canvas id="detailChart"></canvas></div>
-    <div id="detail-empty" class="empty section-hidden">No recent logs to chart.</div>
+    <div class="chart-box tall" id="detail-trend-box"><canvas id="detailChart"></canvas></div>
 
-    <div class="detail-sub" style="margin-top:18px;">Last 7 entries</div>
+    <div class="detail-sub" style="margin-top:18px;">Sleep vs. performance</div>
+    <div class="chart-box" id="detail-scatter-box"><canvas id="detailScatter"></canvas></div>
+
+    <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
+      <span style="flex:1;">Recent entries</span>
+      <div class="toggle" id="detail-recent-toggle">
+        <button class="toggle-btn active" data-mode="7" onclick="setDetailRecent('7')">Last 7</button>
+        <button class="toggle-btn" data-mode="all" onclick="setDetailRecent('all')">All</button>
+      </div>
+    </div>
     <div id="detail-recent"></div>
   </div>
 </div>
@@ -84,6 +105,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
+<script src="js/charts.js"></script>
 <script src="js/coach.js"></script>
 </body>
 </html>
