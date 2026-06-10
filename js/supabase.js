@@ -4,8 +4,8 @@
 // The anon key is meant to be public; Row Level Security protects data.
 // ============================================================
 
-const SUPABASE_URL  = "YOUR_SUPABASE_URL";       // e.g. https://abcxyz.supabase.co
-const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY";  // the long "anon public" key
+const SUPABASE_URL  = "https://ebyhwddmxoqngvqbgkoo.supabase.co/";       // e.g. https://abcxyz.supabase.co
+const SUPABASE_ANON = "sb_publishable_9eAwOE5IexKgr_KezmmQwg_UPYXr3R1";  // the long "anon public" key
 
 // Guard: if keys aren't pasted yet, show a clear banner instead of a blank page.
 let db;
