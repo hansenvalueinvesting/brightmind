@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Log — BrightMind</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">BrightMind<span class="dot">.</span></div>
+  <div class="nav">
+    <a href="dashboard.html">Home</a>
+    <a href="log.html" class="active">Log</a>
+    <a href="insights.html">Insights</a>
+    <button onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div class="app-wrap">
+  <h1 class="page-title">Daily log</h1>
+
+  <!-- TRAINING -->
+  <div class="panel">
+    <div class="panel-title">Training</div>
+    <div class="field">
+      <label for="session_type">Session type</label>
+      <select id="session_type" onchange="toggleTournament()">
+        <option>Solo practice</option>
+        <option>Match play</option>
+        <option>Partner drills</option>
+        <option>Private lesson</option>
+        <option>Group clinic</option>
+        <option>Ghosting/fitness</option>
+        <option>Rest day</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="duration">Duration (HH:MM)</label>
+      <input type="time" id="duration" value="01:00">
+    </div>
+    <div class="slider-row" data-slider="intensity" data-label="Intensity" data-min="very light" data-max="max effort"></div>
+    <div class="slider-row" data-slider="mood_before" data-label="Mood before" data-min="low" data-max="high"></div>
+    <div class="slider-row" data-slider="mood_after" data-label="Mood after" data-min="low" data-max="high"></div>
+    <div class="field">
+      <label for="notes">Notes (optional)</label>
+      <textarea id="notes" placeholder="What worked, what didn't…"></textarea>
+    </div>
+  </div>
+
+  <!-- MENTAL -->
+  <div class="panel">
+    <div class="panel-title">Mental</div>
+    <div class="slider-row" data-slider="confidence" data-label="Confidence" data-min="low" data-max="high"></div>
+    <div class="slider-row" data-slider="stress" data-label="Stress" data-min="none" data-max="extreme"></div>
+    <div class="slider-row" data-slider="focus" data-label="Focus" data-min="scattered" data-max="locked in"></div>
+    <div class="field">
+      <label for="screen_time">Screen time today (hours)</label>
+      <input type="number" id="screen_time" min="0" max="24" step="0.5" placeholder="e.g. 4.5">
+    </div>
+  </div>
+
+  <!-- RECOVERY -->
+  <div class="panel">
+    <div class="panel-title">Recovery</div>
+    <div class="field">
+      <label for="sleep_hours">Sleep last night (hours)</label>
+      <input type="number" id="sleep_hours" min="0" max="24" step="0.5" placeholder="e.g. 7.5">
+    </div>
+    <div class="slider-row" data-slider="sleep_quality" data-label="Sleep quality" data-min="very poor" data-max="excellent"></div>
+    <div class="slider-row" data-slider="soreness" data-label="Body soreness" data-min="none" data-max="very high"></div>
+  </div>
+
+  <!-- TOURNAMENT (conditional) -->
+  <div class="panel section-hidden" id="tournament-panel">
+    <div class="panel-title">Tournament</div>
+    <div class="field">
+      <label for="tournament_name">Tournament name</label>
+      <input type="text" id="tournament_name" placeholder="e.g. Regional Open">
+    </div>
+    <div class="field">
+      <label for="placement">Finishing placement</label>
+      <input type="text" id="placement" placeholder="e.g. Quarterfinal / 3rd">
+    </div>
+    <div class="slider-row" data-slider="perf_rating" data-label="Self-rated performance" data-min="poor" data-max="excellent"></div>
+    <div class="slider-row" data-slider="emotional_state" data-label="Emotional state" data-min="flat" data-max="elated"></div>
+    <div class="field">
+      <label for="reflection">Reflection (optional)</label>
+      <textarea id="reflection" placeholder="How did it feel out there?"></textarea>
+    </div>
+  </div>
+
+  <button class="btn" id="saveBtn" onclick="saveLog()" style="margin-top:18px;">Save today's log</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/log.js"></script>
+</body>
+</html>

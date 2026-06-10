@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home — BrightMind</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">BrightMind<span class="dot">.</span></div>
+  <div class="nav">
+    <a href="dashboard.html" class="active">Home</a>
+    <a href="log.html">Log</a>
+    <a href="insights.html">Insights</a>
+    <button onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div class="app-wrap">
+  <h1 class="page-title">Home</h1>
+
+  <div class="grid-2">
+    <div class="panel streak-panel">
+      <div class="streak-num"><span>🔥</span><span id="streak">0</span></div>
+      <div class="streak-label">Day streak</div>
+      <a href="log.html" style="display:inline-block; margin-top:16px;">Log today →</a>
+    </div>
+    <div class="panel">
+      <div class="panel-title">This week</div>
+      <div id="week-stats" class="hint">Loading…</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <span style="flex:1;">Trend — last 30 days</span>
+      <select id="metric" onchange="renderChart()" style="width:auto; padding:6px 10px; font-size:13px;">
+        <option value="confidence">Confidence</option>
+        <option value="focus">Focus</option>
+        <option value="stress">Stress</option>
+        <option value="sleep_quality">Sleep quality</option>
+        <option value="soreness">Soreness</option>
+        <option value="intensity">Intensity</option>
+        <option value="mood_after">Mood after</option>
+      </select>
+    </div>
+    <div class="chart-box"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Last 7 entries</div>
+    <div id="recent"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="js/supabase.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

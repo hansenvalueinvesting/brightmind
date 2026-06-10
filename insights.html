@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insights — BrightMind</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">BrightMind<span class="dot">.</span></div>
+  <div class="nav">
+    <a href="dashboard.html">Home</a>
+    <a href="log.html">Log</a>
+    <a href="insights.html" class="active">Insights</a>
+    <button onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div class="app-wrap">
+  <h1 class="page-title">Insights</h1>
+
+  <div class="panel">
+    <div class="panel-title">Sleep vs. performance</div>
+    <p class="hint" id="headline" style="margin-bottom:18px;">Loading…</p>
+    <div class="chart-box"><canvas id="scatter"></canvas></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="js/supabase.js"></script>
+<script src="js/insights.js"></script>
+</body>
+</html>
