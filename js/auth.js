@@ -4,10 +4,10 @@
 
 let mode = "login";
 
-// If already logged in, skip straight to the dashboard.
+// If already logged in, skip straight to the right interface for this role.
 (async () => {
   const { data: { session } } = await db.auth.getSession();
-  if (session) window.location.href = "dashboard.html";
+  if (session) window.location.href = landingPage(await roleOf(session.user.id));
 })();
 
 function switchTab(next) {
@@ -61,11 +61,12 @@ async function submitAuth() {
       await db.from("profiles").update({ consent_at: new Date().toISOString() }).eq("id", userId);
     }
 
-    window.location.href = "dashboard.html";
+    // role is the value chosen on the signup form.
+    window.location.href = landingPage(role);
   } else {
-    const { error } = await db.auth.signInWithPassword({ email, password });
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) { setMsg(error.message, "error"); btn.disabled = false; return; }
-    window.location.href = "dashboard.html";
+    window.location.href = landingPage(await roleOf(data.user.id));
   }
 }
 
