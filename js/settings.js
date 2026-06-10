@@ -1,5 +1,5 @@
 // ============================================================
-// Settings — change username (profile), email, and password.
+// Settings — change username (user metadata), email, and password.
 // Each section has its own inline message so results are clear.
 // ============================================================
 
@@ -9,11 +9,10 @@ let session = null;
   session = await requireSession();
   if (!session) return;
 
-  // Prefill current values.
+  // Prefill current values. Username lives in the account's user metadata,
+  // so it needs no extra DB column / migration.
   document.getElementById("email").value = session.user.email || "";
-  const { data } = await db.from("profiles")
-    .select("username").eq("id", session.user.id).single();
-  if (data) document.getElementById("username").value = data.username || "";
+  document.getElementById("username").value = session.user.user_metadata?.username || "";
 })();
 
 function setMsg(id, text, kind) {
@@ -26,10 +25,11 @@ async function saveUsername() {
   const username = document.getElementById("username").value.trim();
   if (!username) { setMsg("username-msg", "Enter a username.", "error"); return; }
 
-  const { error } = await db.from("profiles")
-    .update({ username }).eq("id", session.user.id);
+  const { data, error } = await db.auth.updateUser({ data: { username } });
   if (error) { setMsg("username-msg", error.message, "error"); return; }
 
+  // Keep the local session object in sync so the top-bar chip reflects the change.
+  if (data?.user) session.user = data.user;
   setMsg("username-msg", "Username saved.", "ok");
   loadTopbarUser();   // refresh the top-bar chip
 }

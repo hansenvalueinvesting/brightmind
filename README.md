@@ -72,5 +72,5 @@ schema.sql        run once in Supabase SQL editor
 - **Tournament section** appears when **Session type = Match play**.
 - **Top bar** shows the username and role you're signed in as (falls back to your email until you set a username on the Settings page).
 - **Summary box** on the dashboard toggles between **This week** and **All time** totals.
-- **Settings** lets you change your username, email, and password. Changing your email may require confirmation depending on your Supabase email settings.
+- **Settings** lets you change your username, email, and password. The username is stored in your Supabase Auth user metadata (no extra table/column needed). Changing your email may require confirmation depending on your Supabase email settings.
 - **Insights** uses your match-day performance rating when available, otherwise "mood after" as a general performance proxy, so the chart is useful before your first logged match. It needs 3+ days with sleep recorded.
