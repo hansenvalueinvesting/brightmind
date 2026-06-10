@@ -9,6 +9,7 @@ const SUPABASE_ANON = "sb_publishable_9eAwOE5IexKgr_KezmmQwg_UPYXr3R1";  // the 
 
 // Guard: if keys aren't pasted yet, show a clear banner instead of a blank page.
 let db;
+let dbReady = false;
 if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) || SUPABASE_ANON.startsWith("YOUR_")) {
   document.addEventListener("DOMContentLoaded", () => {
     const bar = document.createElement("div");
@@ -23,6 +24,7 @@ if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) || SUPABASE_ANON.startsWit
 } else {
   // Loaded from the CDN <script> in each HTML file as window.supabase
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  dbReady = true;
 }
 
 // Redirect to login if not authenticated. Returns the session.
@@ -40,3 +42,19 @@ async function signOut() {
   await db.auth.signOut();
   window.location.href = "index.html";
 }
+
+// Populate the top-bar identity chip (username + role) on any page that has it.
+// Runs automatically on load; falls back to the account email if no username is set.
+async function loadTopbarUser() {
+  if (!dbReady) return;
+  const chip = document.getElementById("user-chip");
+  if (!chip) return;
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return;
+  const { data } = await db.from("profiles")
+    .select("username, role").eq("id", session.user.id).single();
+  // textContent (not innerHTML) keeps a user-chosen username from injecting markup.
+  chip.querySelector(".user-name").textContent = (data && data.username) || session.user.email;
+  chip.querySelector(".user-role").textContent = (data && data.role) || "";
+}
+document.addEventListener("DOMContentLoaded", loadTopbarUser);

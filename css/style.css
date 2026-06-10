@@ -64,6 +64,26 @@ a:hover { text-decoration: underline; }
 }
 .nav button:hover { border-color: var(--amber); color: var(--amber); }
 
+/* identity chip in the top bar */
+.user-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; margin-right: 4px; }
+.user-chip:empty, .user-chip .user-name:empty { display: none; }
+.user-name { color: var(--ink); }
+.user-role {
+  font-size: 11px; padding: 2px 8px; border-radius: 20px; text-transform: capitalize;
+  background: var(--panel-2); color: var(--amber); border: 1px solid var(--amber-dim);
+}
+.user-role:empty { display: none; }
+
+/* segmented toggle (e.g. This week / All time) */
+.toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.toggle-btn {
+  background: none; border: none; color: var(--ink-dim); cursor: pointer;
+  font-family: var(--mono); font-size: 12px; padding: 6px 12px;
+}
+.toggle-btn + .toggle-btn { border-left: 1px solid var(--line); }
+.toggle-btn.active { background: var(--amber); color: #1a1200; }
+.toggle-btn:not(.active):hover { color: var(--amber); }
+
 /* ---------- Panels ---------- */
 .panel {
   background: var(--panel); border: 1px solid var(--line);

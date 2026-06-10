@@ -10,9 +10,11 @@
 <div class="topbar">
   <div class="brand">BrightMind<span class="dot">.</span></div>
   <div class="nav">
+    <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
     <a href="dashboard.html" class="active">Home</a>
     <a href="log.html">Log</a>
     <a href="insights.html">Insights</a>
+    <a href="settings.html">Settings</a>
     <button onclick="signOut()">Sign out</button>
   </div>
 </div>
@@ -27,7 +29,13 @@
       <a href="log.html" style="display:inline-block; margin-top:16px;">Log today →</a>
     </div>
     <div class="panel">
-      <div class="panel-title">This week</div>
+      <div class="panel-title">
+        <span style="flex:1;">Summary</span>
+        <div class="toggle" id="stats-toggle">
+          <button class="toggle-btn active" data-mode="week" onclick="setStatsMode('week')">This week</button>
+          <button class="toggle-btn" data-mode="all" onclick="setStatsMode('all')">All time</button>
+        </div>
+      </div>
       <div id="week-stats" class="hint">Loading…</div>
     </div>
   </div>
