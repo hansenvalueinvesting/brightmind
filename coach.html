@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Players — BrightMind</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">BrightMind<span class="dot">.</span></div>
+  <div class="nav">
+    <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
+    <a href="dashboard.html">Home</a>
+    <a href="log.html">Log</a>
+    <a href="insights.html">Insights</a>
+    <a href="coach.html" id="nav-coach" class="active">Players</a>
+    <a href="settings.html">Settings</a>
+    <button onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div class="app-wrap">
+  <h1 class="page-title">Players</h1>
+  <div class="page-sub" id="page-sub"></div>
+
+  <!-- ADD PLAYER -->
+  <div class="panel">
+    <div class="panel-title">Add a player</div>
+    <div class="add-row">
+      <input type="email" id="player-email" placeholder="player@example.com" autocomplete="off">
+      <button class="btn" id="addBtn" onclick="addPlayer()" style="width:auto;">Add player</button>
+    </div>
+    <div class="msg" id="add-msg"></div>
+  </div>
+
+  <!-- TEAM OVERVIEW -->
+  <div class="panel">
+    <div class="panel-title">
+      <span style="flex:1;">Team overview · <span id="team-count">0</span> players</span>
+      <div class="toggle" id="team-toggle">
+        <button class="toggle-btn active" data-mode="week" onclick="setTeamMode('week')">This week</button>
+        <button class="toggle-btn" data-mode="all" onclick="setTeamMode('all')">All time</button>
+      </div>
+    </div>
+    <div id="team-stats" class="hint">Loading…</div>
+  </div>
+
+  <!-- ROSTER -->
+  <div class="panel">
+    <div class="panel-title">Your players</div>
+    <div id="roster"><div class="hint">Loading…</div></div>
+  </div>
+
+  <!-- INDIVIDUAL DETAIL -->
+  <div class="panel section-hidden" id="detail-panel">
+    <div class="panel-title">
+      <span style="flex:1;"><span id="detail-name"></span></span>
+    </div>
+
+    <div class="detail-sub">Summary (all time)</div>
+    <div id="detail-stats" class="hint"></div>
+
+    <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
+      <span style="flex:1;">Trend — last 30 days</span>
+      <select id="detail-metric" onchange="renderDetailChart()" style="width:auto; padding:6px 10px; font-size:13px;">
+        <option value="confidence">Confidence</option>
+        <option value="focus">Focus</option>
+        <option value="stress">Stress</option>
+        <option value="sleep_quality">Sleep quality</option>
+        <option value="soreness">Soreness</option>
+        <option value="intensity">Intensity</option>
+        <option value="mood_after">Mood after</option>
+      </select>
+    </div>
+    <div class="chart-box" id="detail-chartbox"><canvas id="detailChart"></canvas></div>
+    <div id="detail-empty" class="empty section-hidden">No recent logs to chart.</div>
+
+    <div class="detail-sub" style="margin-top:18px;">Last 7 entries</div>
+    <div id="detail-recent"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="js/supabase.js"></script>
+<script src="js/coach.js"></script>
+</body>
+</html>
