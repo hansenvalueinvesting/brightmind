@@ -54,8 +54,12 @@ async function loadTopbarUser() {
   // Username comes from account metadata; role lives on the profile row.
   const { data } = await db.from("profiles")
     .select("role").eq("id", session.user.id).single();
+  const role = (data && data.role) || "";
   // textContent (not innerHTML) keeps a user-chosen username from injecting markup.
   chip.querySelector(".user-name").textContent = session.user.user_metadata?.username || session.user.email;
-  chip.querySelector(".user-role").textContent = (data && data.role) || "";
+  chip.querySelector(".user-role").textContent = role;
+  // The "Players" tab is coach-only.
+  const coachLink = document.getElementById("nav-coach");
+  if (coachLink) coachLink.classList.toggle("section-hidden", role !== "coach");
 }
 document.addEventListener("DOMContentLoaded", loadTopbarUser);

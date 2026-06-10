@@ -19,8 +19,13 @@ let chart = null;
 
 async function loadProfile() {
   const { data } = await db.from("profiles")
-    .select("streak_count").eq("id", session.user.id).single();
+    .select("streak_count, role").eq("id", session.user.id).single();
   document.getElementById("streak").textContent = data?.streak_count ?? 0;
+
+  // Name + account type, shown under the "Home" heading.
+  const name = session.user.user_metadata?.username || session.user.email;
+  const role = data?.role ? data.role[0].toUpperCase() + data.role.slice(1) : "";
+  document.getElementById("page-sub").textContent = role ? `${name} · ${role}` : name;
 }
 
 async function loadLogs() {

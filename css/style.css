@@ -218,6 +218,38 @@ input[type=range]::-moz-range-thumb {
 
 .hint { color: var(--ink-dim); font-size: 13px; margin-top: 4px; }
 .section-hidden { display: none; }
-.page-title { font-size: 24px; font-weight: 700; margin: 26px 0 18px; }
+.page-title { font-size: 24px; font-weight: 700; margin: 26px 0 4px; }
+.page-sub { color: var(--ink-dim); font-size: 14px; margin: 0 0 18px; }
+.page-sub:empty { display: none; }
+.detail-sub {
+  font-family: var(--display); font-weight: 600; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-dim);
+  margin-bottom: 10px;
+}
+
+/* ---------- Coach: add player + roster ---------- */
+.add-row { display: flex; gap: 10px; align-items: stretch; }
+.add-row input { flex: 1; }
+@media (max-width: 480px) { .add-row { flex-direction: column; } .add-row .btn { width: 100%; } }
+
+.player-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 10px; margin: 0 -10px; border-bottom: 1px solid var(--line);
+  cursor: pointer; border-radius: 8px;
+}
+.player-row:last-child { border-bottom: none; }
+.player-row:hover { background: var(--panel-2); }
+.player-row.selected { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--amber); }
+.player-id { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.player-name { color: var(--ink); }
+.player-email { color: var(--ink-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-meta { color: var(--ink-dim); font-size: 12px; white-space: nowrap; }
+.row-x {
+  background: none; border: 1px solid var(--line); color: var(--ink-dim);
+  width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.row-x:hover { border-color: var(--red); color: var(--red); }
+@media (max-width: 480px) { .player-row .player-meta { display: none; } }
 .chart-box { position: relative; height: 280px; }
 .empty { color: var(--ink-dim); text-align: center; padding: 30px; font-size: 14px; }
