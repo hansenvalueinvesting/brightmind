@@ -4,17 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Settings — BrightMind</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BrightMind">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="topbar">
-  <div class="brand">BrightMind<span class="dot">.</span></div>
+  <div class="brand"><img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span></div>
   <div class="nav">
     <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
     <a href="dashboard.html">Home</a>
     <a href="log.html">Log</a>
     <a href="insights.html">Insights</a>
-    <a href="coach.html" id="nav-coach" class="section-hidden">Players</a>
+    <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
     <a href="settings.html" class="active">Settings</a>
     <button onclick="signOut()">Sign out</button>
   </div>

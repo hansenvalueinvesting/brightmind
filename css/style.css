@@ -52,8 +52,10 @@ a:hover { text-decoration: underline; }
   padding: 18px 20px; max-width: 960px; margin: 0 auto;
   border-bottom: 1px solid var(--line);
 }
-.brand { font-family: var(--display); font-weight: 700; font-size: 18px; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 9px; }
 .brand .dot { color: var(--amber); }
+.brand-logo { width: 1.4em; height: 1.4em; border-radius: 5px; flex-shrink: 0; display: block; }
+.brand-auth { justify-content: center; }
 .nav { display: flex; gap: 18px; align-items: center; }
 .nav a { color: var(--ink-dim); font-size: 14px; }
 .nav a.active { color: var(--ink); }
@@ -250,7 +252,41 @@ input[type=range]::-moz-range-thumb {
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .row-x:hover { border-color: var(--red); color: var(--red); }
-@media (max-width: 480px) { .player-row .player-meta { display: none; } }
+@media (max-width: 420px) { .player-row .player-meta { display: none; } }
 .chart-box { position: relative; height: 280px; }
 .chart-box.tall { height: 340px; }
 .empty { color: var(--ink-dim); text-align: center; padding: 30px; font-size: 14px; }
+
+/* ============================================================
+   Mobile / small screens
+   ============================================================ */
+@media (max-width: 680px) {
+  /* Stack the top bar: brand on top, identity + nav below. */
+  .topbar { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px 16px; }
+  .nav { flex-wrap: wrap; gap: 11px 16px; }
+  .nav a { padding: 2px 0; }
+  .user-chip {
+    order: -1; width: 100%; justify-content: flex-start; margin: 0;
+    padding-bottom: 11px; border-bottom: 1px solid var(--line);
+  }
+
+  .app-wrap { padding: 0 14px 64px; }
+  .page-title { font-size: 21px; margin-top: 20px; }
+  .page-sub { font-size: 13px; }
+  .panel { padding: 18px 16px; }
+  .panel + .panel { margin-top: 14px; }
+  .panel-title { flex-wrap: wrap; row-gap: 8px; }
+
+  .chart-box { height: 240px; }
+  .chart-box.tall { height: 300px; }
+  .auth-wrap { padding: 18px; }
+
+  /* 16px inputs stop iOS from auto-zooming the page on focus. */
+  input[type=text], input[type=email], input[type=password],
+  input[type=number], input[type=time], select, textarea { font-size: 16px; }
+}
+
+@media (max-width: 380px) {
+  .brand { font-size: 16px; }
+  .nav { gap: 10px 12px; }
+}
