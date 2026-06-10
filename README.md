@@ -17,12 +17,7 @@ Pure static frontend (HTML/CSS/JS) + Supabase backend (auth + Postgres). No buil
 2. Open `schema.sql` from this repo, copy its entire contents, paste, and click **Run**.
 3. You should see "Success. No rows returned." That created the `profiles` and `logs` tables, security rules, and the signup trigger.
 
-### 3. Turn off email confirmation (so the prototype logs in instantly)
-1. Left sidebar → **Authentication** → **Sign In / Providers** (or **Providers → Email**).
-2. Turn **Confirm email** OFF. Save.
-   *(Leave it on if you want real email verification — signup will then ask users to confirm before first login.)*
-
-### 4. Paste your keys into the app
+### 3. Paste your keys into the app
 1. Left sidebar → **Project Settings** (gear) → **API**.
 2. Copy the **Project URL** and the **anon public** key.
 3. Open `js/supabase.js` and replace the two placeholder values:
