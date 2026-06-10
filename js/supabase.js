@@ -43,6 +43,29 @@ async function signOut() {
   window.location.href = "index.html";
 }
 
+// ---- Role-based routing ---------------------------------------------------
+// Coaches and players get separate interfaces. These helpers decide where a
+// given role belongs and are shared by the login flow and the per-page guard.
+const COACH_PAGES  = ["coach.html"];
+const PLAYER_PAGES = ["dashboard.html", "log.html", "insights.html"];
+
+function landingPage(role) { return role === "coach" ? "coach.html" : "dashboard.html"; }
+
+async function roleOf(userId) {
+  const { data } = await db.from("profiles").select("role").eq("id", userId).single();
+  return (data && data.role) || "player";
+}
+
+// Send a user to their own interface if they've landed on the other one.
+// Returns true if a redirect was issued (caller should stop).
+function enforcePageRole(role) {
+  const page = location.pathname.split("/").pop() || "";
+  const isCoach = role === "coach";
+  if (isCoach && PLAYER_PAGES.includes(page))  { location.replace("coach.html"); return true; }
+  if (!isCoach && COACH_PAGES.includes(page))  { location.replace("dashboard.html"); return true; }
+  return false;
+}
+
 // Populate the top-bar identity chip (username + role) on any page that has it.
 // Runs automatically on load; falls back to the account email if no username is set.
 async function loadTopbarUser() {
@@ -52,14 +75,19 @@ async function loadTopbarUser() {
   const { data: { session } } = await db.auth.getSession();
   if (!session) return;
   // Username comes from account metadata; role lives on the profile row.
-  const { data } = await db.from("profiles")
-    .select("role").eq("id", session.user.id).single();
-  const role = (data && data.role) || "";
+  const role = await roleOf(session.user.id);
+
+  // Keep each role on its own interface; bail out if we're redirecting away.
+  if (enforcePageRole(role)) return;
+
   // textContent (not innerHTML) keeps a user-chosen username from injecting markup.
   chip.querySelector(".user-name").textContent = session.user.user_metadata?.username || session.user.email;
   chip.querySelector(".user-role").textContent = role;
-  // The "Players" tab is coach-only.
-  const coachLink = document.getElementById("nav-coach");
-  if (coachLink) coachLink.classList.toggle("section-hidden", role !== "coach");
+
+  // Show only the nav links that belong to this role.
+  const isCoach = role === "coach";
+  document.getElementById("nav-coach")?.classList.toggle("section-hidden", !isCoach);
+  document.querySelectorAll('.nav a[href="dashboard.html"], .nav a[href="log.html"], .nav a[href="insights.html"]')
+    .forEach(a => a.classList.toggle("section-hidden", isCoach));
 }
 document.addEventListener("DOMContentLoaded", loadTopbarUser);
