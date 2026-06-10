@@ -61,14 +61,7 @@ async function submitAuth() {
       await db.from("profiles").update({ consent_at: new Date().toISOString() }).eq("id", userId);
     }
 
-    // If email confirmation is OFF (default for new projects), a session exists now.
-    if (data.session) {
-      window.location.href = "dashboard.html";
-    } else {
-      setMsg("Account created. Check your email to confirm, then log in.", "ok");
-      switchTab("login");
-      btn.disabled = false;
-    }
+    window.location.href = "dashboard.html";
   } else {
     const { error } = await db.auth.signInWithPassword({ email, password });
     if (error) { setMsg(error.message, "error"); btn.disabled = false; return; }
