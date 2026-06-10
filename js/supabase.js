@@ -51,10 +51,11 @@ async function loadTopbarUser() {
   if (!chip) return;
   const { data: { session } } = await db.auth.getSession();
   if (!session) return;
+  // Username comes from account metadata; role lives on the profile row.
   const { data } = await db.from("profiles")
-    .select("username, role").eq("id", session.user.id).single();
+    .select("role").eq("id", session.user.id).single();
   // textContent (not innerHTML) keeps a user-chosen username from injecting markup.
-  chip.querySelector(".user-name").textContent = (data && data.username) || session.user.email;
+  chip.querySelector(".user-name").textContent = session.user.user_metadata?.username || session.user.email;
   chip.querySelector(".user-role").textContent = (data && data.role) || "";
 }
 document.addEventListener("DOMContentLoaded", loadTopbarUser);
