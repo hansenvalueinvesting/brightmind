@@ -257,6 +257,21 @@ input[type=range]::-moz-range-thumb {
 }
 .row-x:hover { border-color: var(--red); color: var(--red); }
 @media (max-width: 420px) { .player-row .player-meta { display: none; } }
+
+/* ---------- Coach: teams ---------- */
+.team-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-top: 12px; }
+.team-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.team-name { font-family: var(--display); font-weight: 600; flex: 1; }
+.team-members { display: flex; flex-wrap: wrap; gap: 8px; }
+.team-chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 4px 6px 4px 12px;
+}
+.chip-x {
+  background: none; border: none; color: var(--ink-dim); cursor: pointer; font-size: 11px;
+  width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.chip-x:hover { color: var(--red); }
 .chart-box { position: relative; height: 280px; }
 .chart-box.tall { height: 340px; }
 .empty { color: var(--ink-dim); text-align: center; padding: 30px; font-size: 14px; }

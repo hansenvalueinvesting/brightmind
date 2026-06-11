@@ -26,9 +26,12 @@ function buildSliders() {
   });
 }
 
-function toggleTournament() {
-  const isMatch = document.getElementById("session_type").value === "Match play";
-  document.getElementById("tournament-panel").classList.toggle("section-hidden", !isMatch);
+// React to the session-type dropdown: show match details only for matches,
+// and hide the duration field on a rest day (there's no session to time).
+function onSessionType() {
+  const type = document.getElementById("session_type").value;
+  document.getElementById("tournament-panel").classList.toggle("section-hidden", type !== "Match play");
+  document.getElementById("duration-field").classList.toggle("section-hidden", type === "Rest day");
 }
 
 function setMsg(text, kind) {
@@ -61,12 +64,13 @@ async function saveLog() {
   setMsg("");
 
   const isMatch = val("session_type") === "Match play";
+  const isRest = val("session_type") === "Rest day";
 
   const row = {
     user_id: session.user.id,
     log_date: new Date().toLocaleDateString("en-CA"), // local YYYY-MM-DD
     session_type: val("session_type"),
-    duration_minutes: durationMinutes(),
+    duration_minutes: isRest ? 0 : durationMinutes(),
     intensity: sld("intensity"),
     mood_before: sld("mood_before"),
     mood_after: sld("mood_after"),
@@ -79,6 +83,7 @@ async function saveLog() {
     sleep_quality: sld("sleep_quality"),
     soreness: sld("soreness"),
     is_match_day: isMatch,
+    match_type:     isMatch ? val("match_type") : null,
     tournament_name: isMatch ? (val("tournament_name") || null) : null,
     placement:      isMatch ? (val("placement") || null) : null,
     perf_rating:    isMatch ? sld("perf_rating") : null,
