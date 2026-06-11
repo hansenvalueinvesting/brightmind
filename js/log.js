@@ -48,10 +48,11 @@ const val = id => document.getElementById(id).value;
 const num = id => { const v = parseFloat(val(id)); return isNaN(v) ? null : v; };
 const sld = id => parseInt(val(id), 10);
 
-// "HH:MM" -> total minutes
+// Hours + minutes inputs -> total minutes
 function durationMinutes() {
-  const [h, m] = val("duration").split(":").map(Number);
-  return (h || 0) * 60 + (m || 0);
+  const h = parseInt(val("duration_h"), 10) || 0;
+  const m = parseInt(val("duration_m"), 10) || 0;
+  return h * 60 + m;
 }
 
 async function saveLog() {
