@@ -17,6 +17,9 @@ let logsByPlayer = {};     // player_id -> logs[] (ascending)
 let allPlayerLogs = [];    // every fetched log row, flat
 let selected = null;       // selected player_id
 
+let teams = [];            // coach's teams (coach view only)
+let teamMembers = {};      // team_id -> [player_id]
+
 let teamMode = "week";     // overview summary: "week" | "all"
 let teamTrendRange = "30"; // overview trend chart: "30" | "all"
 let detailRange = "30";    // individual trend chart: "30" | "all"
@@ -65,6 +68,12 @@ async function loadPlayers() {
   renderTeamTrend();
   renderTeamCompare();
   renderDetail();
+
+  // Teams are a coach-only feature (config flag + markup present).
+  if (R.teams && document.getElementById("teams-panel")) {
+    await loadTeams();
+    renderTeams();
+  }
 }
 
 // ---------- Add / remove ----------
@@ -87,6 +96,8 @@ async function addPlayer() {
 }
 
 async function removePlayer(id) {
+  // Also drop them from any of this coach's teams (RLS scopes the delete).
+  await db.from("team_members").delete().eq("player_id", id);
   await db.from("coach_players").delete()
     .eq("coach_id", session.user.id).eq("player_id", id);
   if (selected === id) selected = null;
@@ -251,6 +262,85 @@ function renderDetailRecent() {
           <span class="badge">${l.is_match_day ? "match" : "intensity " + (l.intensity ?? "–")}</span>
         </div>`).join("")
     : '<div class="empty">No entries.</div>';
+}
+
+// ---------- Teams (coach only) ----------
+async function loadTeams() {
+  const { data: ts } = await db.from("teams")
+    .select("*").eq("coach_id", session.user.id).order("created_at");
+  teams = ts || [];
+  teamMembers = {};
+  if (teams.length) {
+    const { data: ms } = await db.from("team_members")
+      .select("*").in("team_id", teams.map(t => t.id));
+    for (const m of (ms || [])) (teamMembers[m.team_id] ||= []).push(m.player_id);
+  }
+}
+
+function renderTeams() {
+  const el = document.getElementById("teams-list");
+  if (!teams.length) {
+    el.innerHTML = '<div class="empty">No teams yet. Create one above, then add players to it.</div>';
+    return;
+  }
+  el.innerHTML = teams.map(t => {
+    const ids = teamMembers[t.id] || [];
+    const chips = ids.map(pid => {
+      const p = players.find(x => x.player_id === pid);
+      const name = p ? (p.username || p.email) : "(removed)";
+      const streak = p ? (p.streak_count ?? 0) : 0;
+      return `<span class="team-chip">${esc(name)} · 🔥${streak}
+        <button class="chip-x" title="Remove from team"
+                onclick="removeFromTeam('${t.id}','${pid}')">✕</button></span>`;
+    }).join("") || '<span class="hint">No players on this team yet.</span>';
+
+    const avail = players.filter(p => !ids.includes(p.player_id));
+    const adder = avail.length
+      ? `<div class="add-row" style="margin-top:10px;">
+           <select id="team-sel-${t.id}">
+             ${avail.map(p => `<option value="${p.player_id}">${esc(p.username || p.email)}</option>`).join("")}
+           </select>
+           <button class="btn btn-ghost" style="width:auto;" onclick="addToTeam('${t.id}')">Add to team</button>
+         </div>`
+      : '<div class="hint" style="margin-top:8px;">All your players are on this team.</div>';
+
+    return `<div class="team-card">
+      <div class="team-head">
+        <span class="team-name">${esc(t.name)}</span>
+        <button class="row-x" title="Delete team" onclick="deleteTeam('${t.id}')">✕</button>
+      </div>
+      <div class="team-members">${chips}</div>
+      ${adder}
+    </div>`;
+  }).join("");
+}
+
+async function createTeam() {
+  const input = document.getElementById("team-name");
+  const name = input.value.trim();
+  if (!name) { setMsg("team-msg", "Enter a team name.", "error"); return; }
+  const { error } = await db.from("teams").insert({ coach_id: session.user.id, name });
+  if (error) { setMsg("team-msg", esc(error.message), "error"); return; }
+  input.value = "";
+  setMsg("team-msg", "Team created.", "ok");
+  await loadTeams(); renderTeams();
+}
+
+async function deleteTeam(id) {
+  await db.from("teams").delete().eq("id", id);
+  await loadTeams(); renderTeams();
+}
+
+async function addToTeam(teamId) {
+  const sel = document.getElementById("team-sel-" + teamId);
+  if (!sel || !sel.value) return;
+  await db.from("team_members").insert({ team_id: teamId, player_id: sel.value });
+  await loadTeams(); renderTeams();
+}
+
+async function removeFromTeam(teamId, playerId) {
+  await db.from("team_members").delete().eq("team_id", teamId).eq("player_id", playerId);
+  await loadTeams(); renderTeams();
 }
 
 // ---------- Small local helpers ----------

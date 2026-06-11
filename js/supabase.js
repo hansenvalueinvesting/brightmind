@@ -49,7 +49,7 @@ async function signOut() {
 //   player -> dashboard/log/insights   coach -> coach.html   parent -> parent.html
 const PAGE_ROLE = {
   "dashboard.html": "player", "log.html": "player", "insights.html": "player",
-  "coach.html": "coach", "parent.html": "parent",
+  "team.html": "player", "coach.html": "coach", "parent.html": "parent",
 };
 
 function landingPage(role) {
@@ -96,5 +96,16 @@ async function loadTopbarUser() {
   // Player pages (Home/Log/Insights) are only for players.
   document.querySelectorAll('.nav a[href="dashboard.html"], .nav a[href="log.html"], .nav a[href="insights.html"]')
     .forEach(a => a.classList.toggle("section-hidden", role !== "player"));
+
+  // The Team tab appears only for a player who's been added to a team.
+  const teamLink = document.getElementById("nav-team");
+  if (teamLink) {
+    let onTeam = false;
+    if (role === "player") {
+      const { data } = await db.rpc("get_my_teams");
+      onTeam = !!(data && data.length);
+    }
+    teamLink.classList.toggle("section-hidden", !onTeam);
+  }
 }
 document.addEventListener("DOMContentLoaded", loadTopbarUser);

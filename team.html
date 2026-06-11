@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Insights — BrightMind</title>
+<title>Team — BrightMind</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -22,8 +22,8 @@
     <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
     <a href="dashboard.html">Home</a>
     <a href="log.html">Log</a>
-    <a href="insights.html" class="active">Insights</a>
-    <a href="team.html" id="nav-team" class="section-hidden">Team</a>
+    <a href="insights.html">Insights</a>
+    <a href="team.html" id="nav-team" class="active">Team</a>
     <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
     <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
     <a href="settings.html">Settings</a>
@@ -32,18 +32,12 @@
 </div>
 
 <div class="app-wrap">
-  <h1 class="page-title">Insights</h1>
-
-  <div class="panel">
-    <div class="panel-title">Sleep vs. performance</div>
-    <p class="hint" id="headline" style="margin-bottom:18px;">Loading…</p>
-    <div class="chart-box"><canvas id="scatter"></canvas></div>
-  </div>
+  <h1 class="page-title">Team</h1>
+  <div id="teams"><div class="hint">Loading…</div></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
-<script src="js/insights.js"></script>
+<script src="js/team.js"></script>
 </body>
 </html>

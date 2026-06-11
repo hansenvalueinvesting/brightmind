@@ -209,3 +209,68 @@ $$;
 
 grant execute on function public.add_player_by_email(text) to authenticated;
 grant execute on function public.get_my_players() to authenticated;
+
+-- ----------------------------------------------------------------
+-- MATCH TYPE
+-- Tournament / practice / school-league, captured on match-day logs.
+-- ----------------------------------------------------------------
+alter table public.logs add column if not exists match_type text;
+
+-- ----------------------------------------------------------------
+-- TEAMS
+-- A coach groups some of their players into named teams (School Team,
+-- League Team, …). Players can see the roster (names + streak) of teams
+-- they belong to. Safe to re-run.
+-- ----------------------------------------------------------------
+create table if not exists public.teams (
+  id         uuid primary key default gen_random_uuid(),
+  coach_id   uuid not null references auth.users(id) on delete cascade,
+  name       text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.team_members (
+  team_id    uuid not null references public.teams(id) on delete cascade,
+  player_id  uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (team_id, player_id)
+);
+
+alter table public.teams        enable row level security;
+alter table public.team_members enable row level security;
+
+-- A coach owns and manages their own teams.
+drop policy if exists "coach manages own teams" on public.teams;
+create policy "coach manages own teams" on public.teams
+  for all using (auth.uid() = coach_id) with check (auth.uid() = coach_id);
+
+-- A coach manages membership of teams they own. (Player-facing reads go
+-- through get_my_teams() so there's no self-referential RLS recursion.)
+drop policy if exists "coach manages own team members" on public.team_members;
+create policy "coach manages own team members" on public.team_members
+  for all using (
+    exists (select 1 from public.teams t where t.id = team_members.team_id and t.coach_id = auth.uid())
+  ) with check (
+    exists (select 1 from public.teams t where t.id = team_members.team_id and t.coach_id = auth.uid())
+  );
+
+-- Roster (names + streak) of every team the caller belongs to.
+create or replace function public.get_my_teams()
+returns table (team_id uuid, team_name text, member_id uuid, member_name text, member_streak int)
+language sql security definer set search_path = public, auth
+as $$
+  select t.id,
+         t.name,
+         u.id,
+         coalesce(u.raw_user_meta_data->>'username', u.email),
+         coalesce(p.streak_count, 0)
+  from public.team_members me
+  join public.teams t        on t.id = me.team_id
+  join public.team_members tm on tm.team_id = t.id
+  join auth.users u          on u.id = tm.player_id
+  left join public.profiles p on p.id = tm.player_id
+  where me.player_id = auth.uid()
+  order by t.name, lower(coalesce(u.raw_user_meta_data->>'username', u.email));
+$$;
+
+grant execute on function public.get_my_teams() to authenticated;
