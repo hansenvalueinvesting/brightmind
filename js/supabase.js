@@ -44,25 +44,31 @@ async function signOut() {
 }
 
 // ---- Role-based routing ---------------------------------------------------
-// Coaches and players get separate interfaces. These helpers decide where a
-// given role belongs and are shared by the login flow and the per-page guard.
-const COACH_PAGES  = ["coach.html"];
-const PLAYER_PAGES = ["dashboard.html", "log.html", "insights.html"];
+// Each role gets its own interface. These helpers decide where a given role
+// belongs and are shared by the login flow and the per-page guard.
+//   player -> dashboard/log/insights   coach -> coach.html   parent -> parent.html
+const PAGE_ROLE = {
+  "dashboard.html": "player", "log.html": "player", "insights.html": "player",
+  "coach.html": "coach", "parent.html": "parent",
+};
 
-function landingPage(role) { return role === "coach" ? "coach.html" : "dashboard.html"; }
+function landingPage(role) {
+  if (role === "coach")  return "coach.html";
+  if (role === "parent") return "parent.html";
+  return "dashboard.html";
+}
 
 async function roleOf(userId) {
   const { data } = await db.from("profiles").select("role").eq("id", userId).single();
   return (data && data.role) || "player";
 }
 
-// Send a user to their own interface if they've landed on the other one.
-// Returns true if a redirect was issued (caller should stop).
+// If the current page belongs to a different role, send the user to their own
+// interface. Returns true if a redirect was issued (caller should stop).
 function enforcePageRole(role) {
   const page = location.pathname.split("/").pop() || "";
-  const isCoach = role === "coach";
-  if (isCoach && PLAYER_PAGES.includes(page))  { location.replace("coach.html"); return true; }
-  if (!isCoach && COACH_PAGES.includes(page))  { location.replace("dashboard.html"); return true; }
+  const need = PAGE_ROLE[page];
+  if (need && need !== role) { location.replace(landingPage(role)); return true; }
   return false;
 }
 
@@ -85,9 +91,10 @@ async function loadTopbarUser() {
   chip.querySelector(".user-role").textContent = role;
 
   // Show only the nav links that belong to this role.
-  const isCoach = role === "coach";
-  document.getElementById("nav-coach")?.classList.toggle("section-hidden", !isCoach);
+  document.getElementById("nav-coach")?.classList.toggle("section-hidden", role !== "coach");
+  document.getElementById("nav-parent")?.classList.toggle("section-hidden", role !== "parent");
+  // Player pages (Home/Log/Insights) are only for players.
   document.querySelectorAll('.nav a[href="dashboard.html"], .nav a[href="log.html"], .nav a[href="insights.html"]')
-    .forEach(a => a.classList.toggle("section-hidden", isCoach));
+    .forEach(a => a.classList.toggle("section-hidden", role !== "player"));
 }
 document.addEventListener("DOMContentLoaded", loadTopbarUser);

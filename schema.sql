@@ -154,7 +154,8 @@ create policy "coach reads player profile" on public.profiles
 -- the auth.users table or other people's data to the anon client.
 -- ----------------------------------------------------------------
 
--- Add a player to the calling coach's roster by email.
+-- Add a player/child to the calling adult's roster by email.
+-- Coaches add players; parents add their children (same link table).
 create or replace function public.add_player_by_email(p_email text)
 returns table (player_id uuid, email text, username text)
 language plpgsql
@@ -164,8 +165,8 @@ as $$
 declare
   v_uid uuid;
 begin
-  if coalesce((select role from public.profiles where id = auth.uid()), '') <> 'coach' then
-    raise exception 'Only coaches can add players';
+  if coalesce((select role from public.profiles where id = auth.uid()), '') not in ('coach','parent') then
+    raise exception 'Only coaches or parents can add athletes';
   end if;
 
   select u.id into v_uid from auth.users u
