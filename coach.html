@@ -92,6 +92,39 @@
     <div id="teams-list"></div>
   </div>
 
+  <!-- ANALYZE BY TEAM -->
+  <div class="panel" id="analyze-panel">
+    <div class="panel-title">
+      <span style="flex:1;">Analyze by team</span>
+      <select id="analyze-team" onchange="onAnalyzeTeamChange()" style="width:auto; padding:6px 10px; font-size:13px;"></select>
+    </div>
+
+    <div id="analyze-empty" class="empty section-hidden">Create a team above to analyze it here.</div>
+
+    <div id="analyze-body">
+      <div class="detail-sub" style="display:flex; align-items:center; gap:10px;">
+        <span style="flex:1;">Summary</span>
+        <div class="toggle" id="analyze-toggle">
+          <button class="toggle-btn active" data-mode="week" onclick="setAnalyzeMode('week')">This week</button>
+          <button class="toggle-btn" data-mode="all" onclick="setAnalyzeMode('all')">All time</button>
+        </div>
+      </div>
+      <div id="analyze-stats" class="hint"></div>
+
+      <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
+        <span style="flex:1;">Team trends · average across members</span>
+        <div class="toggle" id="analyze-trend-toggle">
+          <button class="toggle-btn active" data-range="30" onclick="setAnalyzeTrendRange('30')">30 days</button>
+          <button class="toggle-btn" data-range="all" onclick="setAnalyzeTrendRange('all')">All time</button>
+        </div>
+      </div>
+      <div class="chart-box tall" id="analyze-trend-box"><canvas id="analyzeTrendChart"></canvas></div>
+
+      <div class="detail-sub" style="margin-top:18px;">Member comparison · averages (all time)</div>
+      <div class="chart-box tall" id="analyze-compare-box"><canvas id="analyzeCompareChart"></canvas></div>
+    </div>
+  </div>
+
   <!-- INDIVIDUAL DETAIL -->
   <div class="panel section-hidden" id="detail-panel">
     <div class="panel-title">
