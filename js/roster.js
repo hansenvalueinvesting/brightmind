@@ -20,6 +20,11 @@ let selected = null;       // selected player_id
 let teams = [];            // coach's teams (coach view only)
 let teamMembers = {};      // team_id -> [player_id]
 
+let analyzeTeamId = null;  // team selected in "Analyze by team"
+let analyzeMode = "week";  // analysis summary: "week" | "all"
+let analyzeTrendRange = "30";
+let analyzeTrend = null, analyzeCompare = null;
+
 let teamMode = "week";     // overview summary: "week" | "all"
 let teamTrendRange = "30"; // overview trend chart: "30" | "all"
 let detailRange = "30";    // individual trend chart: "30" | "all"
@@ -71,8 +76,7 @@ async function loadPlayers() {
 
   // Teams are a coach-only feature (config flag + markup present).
   if (R.teams && document.getElementById("teams-panel")) {
-    await loadTeams();
-    renderTeams();
+    await refreshTeams();
   }
 }
 
@@ -323,24 +327,132 @@ async function createTeam() {
   if (error) { setMsg("team-msg", esc(error.message), "error"); return; }
   input.value = "";
   setMsg("team-msg", "Team created.", "ok");
-  await loadTeams(); renderTeams();
+  await refreshTeams();
 }
 
 async function deleteTeam(id) {
   await db.from("teams").delete().eq("id", id);
-  await loadTeams(); renderTeams();
+  await refreshTeams();
 }
 
 async function addToTeam(teamId) {
   const sel = document.getElementById("team-sel-" + teamId);
   if (!sel || !sel.value) return;
   await db.from("team_members").insert({ team_id: teamId, player_id: sel.value });
-  await loadTeams(); renderTeams();
+  await refreshTeams();
 }
 
 async function removeFromTeam(teamId, playerId) {
   await db.from("team_members").delete().eq("team_id", teamId).eq("player_id", playerId);
-  await loadTeams(); renderTeams();
+  await refreshTeams();
+}
+
+// Reload teams + members, then repaint both the management list and the analysis.
+async function refreshTeams() {
+  await loadTeams();
+  renderTeams();
+  renderAnalyzeSelector();
+  renderAnalyze();
+}
+
+// ---------- Analyze by team (coach only) ----------
+function renderAnalyzeSelector() {
+  const sel = document.getElementById("analyze-team");
+  if (!sel) return;
+  if (!teams.length) { sel.innerHTML = ""; return; }
+  if (!analyzeTeamId || !teams.some(t => t.id === analyzeTeamId)) analyzeTeamId = teams[0].id;
+  sel.innerHTML = teams.map(t =>
+    `<option value="${t.id}" ${t.id === analyzeTeamId ? "selected" : ""}>${esc(t.name)}</option>`).join("");
+}
+
+function onAnalyzeTeamChange() {
+  analyzeTeamId = document.getElementById("analyze-team").value;
+  renderAnalyze();
+}
+
+function analyzeMemberList() {
+  const ids = teamMembers[analyzeTeamId] || [];
+  return players.filter(p => ids.includes(p.player_id));
+}
+function analyzeLogList() {
+  const ids = new Set(teamMembers[analyzeTeamId] || []);
+  return allPlayerLogs.filter(l => ids.has(l.user_id));
+}
+
+function renderAnalyze() {
+  const sel = document.getElementById("analyze-team");
+  const body = document.getElementById("analyze-body");
+  const empty = document.getElementById("analyze-empty");
+  if (!sel) return;
+  if (!teams.length) {
+    sel.classList.add("section-hidden");
+    body.classList.add("section-hidden");
+    empty.classList.remove("section-hidden");
+    return;
+  }
+  sel.classList.remove("section-hidden");
+  body.classList.remove("section-hidden");
+  empty.classList.add("section-hidden");
+  renderAnalyzeSummary();
+  renderAnalyzeTrend();
+  renderAnalyzeCompare();
+}
+
+function setAnalyzeMode(mode) {
+  analyzeMode = mode;
+  toggleActive("#analyze-toggle", mode, "mode");
+  renderAnalyzeSummary();
+}
+
+function renderAnalyzeSummary() {
+  const el = document.getElementById("analyze-stats");
+  const logs = analyzeLogList();
+  const set = analyzeMode === "week" ? rangeSlice(logs, 7) : logs;
+  const s = summarize(set);
+  el.innerHTML = s ? statRows(s)
+    : (analyzeMode === "week"
+        ? "No sessions logged by this team this week."
+        : "No sessions logged by this team yet.");
+}
+
+function setAnalyzeTrendRange(range) {
+  analyzeTrendRange = range;
+  toggleActive("#analyze-trend-toggle", range, "range");
+  renderAnalyzeTrend();
+}
+
+function renderAnalyzeTrend() {
+  const box = document.getElementById("analyze-trend-box");
+  if (analyzeTrend) { analyzeTrend.destroy(); analyzeTrend = null; }
+
+  const logs = analyzeLogList();
+  const set = analyzeTrendRange === "all" ? logs : rangeSlice(logs, 30);
+  if (!set.length) { box.innerHTML = '<div class="empty">No logs to chart for this team yet.</div>'; return; }
+
+  box.innerHTML = '<canvas id="analyzeTrendChart"></canvas>';
+  const { dates, series } = teamAverageSeries(set);
+  analyzeTrend = multiLineChart("analyzeTrendChart", dates.map(d => d.slice(5)), k => series[k]);
+}
+
+function renderAnalyzeCompare() {
+  const box = document.getElementById("analyze-compare-box");
+  if (analyzeCompare) { analyzeCompare.destroy(); analyzeCompare = null; }
+
+  const members = analyzeMemberList();
+  if (!members.length) { box.innerHTML = '<div class="empty">No players on this team yet.</div>'; return; }
+
+  box.innerHTML = '<canvas id="analyzeCompareChart"></canvas>';
+  const labels = members.map(p => p.username || p.email);
+  const pick = [
+    ["confidence", "Confidence", "#ffb000"],
+    ["focus", "Focus", "#3fb950"],
+    ["sleep_quality", "Sleep quality", "#58a6ff"],
+  ];
+  const datasets = pick.map(([key, label, color]) => ({
+    label, backgroundColor: color,
+    data: members.map(p => +avgOf(logsByPlayer[p.player_id] || [], key).toFixed(1)),
+  }));
+  analyzeCompare = barChart("analyzeCompareChart", labels, datasets, { yMax: 10 });
 }
 
 // ---------- Small local helpers ----------
