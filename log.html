@@ -49,8 +49,11 @@
       </select>
     </div>
     <div class="field">
-      <label for="duration">Duration (HH:MM)</label>
-      <input type="time" id="duration" value="01:00">
+      <label>Duration</label>
+      <div class="duration-row">
+        <input type="number" id="duration_h" min="0" max="24" step="1" value="1" inputmode="numeric"><span>hr</span>
+        <input type="number" id="duration_m" min="0" max="59" step="1" value="0" inputmode="numeric"><span>min</span>
+      </div>
     </div>
     <div class="slider-row" data-slider="intensity" data-label="Intensity" data-min="very light" data-max="max effort"></div>
     <div class="slider-row" data-slider="mood_before" data-label="Mood before" data-min="low" data-max="high"></div>

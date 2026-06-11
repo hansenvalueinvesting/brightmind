@@ -119,6 +119,10 @@ input:focus, select:focus, textarea:focus {
 textarea { resize: vertical; min-height: 64px; }
 select { cursor: pointer; }
 
+.duration-row { display: flex; align-items: center; gap: 8px; }
+.duration-row input { width: 88px; }
+.duration-row span { color: var(--ink-dim); font-size: 13px; margin-right: 6px; }
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
 
