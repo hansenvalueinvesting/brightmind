@@ -1,13 +1,15 @@
 // ============================================================
-// Coach dashboard — add players by email, team-wide stats + charts,
-// and per-player drill-down. Chart/stats helpers live in charts.js.
+// Shared roster view for supervising adults (coach or parent).
+// The page sets `window.ROSTER = { role, one, many }` before loading this:
+//   coach  -> { role:"coach",  one:"player", many:"players"  }
+//   parent -> { role:"parent", one:"child",  many:"children" }
 //
-// Data access:
-//  - get_my_players()  RPC -> roster + identity (email/username from auth)
-//  - add_player_by_email() RPC -> link a player by email
-//  - logs are read directly; an RLS policy lets a coach select the logs
-//    of players they're linked to.
+// Both use the same coach_players link table + RLS and the same RPCs
+// (add_player_by_email / get_my_players). Chart helpers live in charts.js.
 // ============================================================
+
+const R = Object.assign({ role: "coach", one: "player", many: "players" }, window.ROSTER || {});
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 let session = null;
 let players = [];          // [{ player_id, email, username, streak_count, last_log_date }]
@@ -15,10 +17,10 @@ let logsByPlayer = {};     // player_id -> logs[] (ascending)
 let allPlayerLogs = [];    // every fetched log row, flat
 let selected = null;       // selected player_id
 
-let teamMode = "week";     // team summary: "week" | "all"
-let teamTrendRange = "30"; // team trend chart: "30" | "all"
-let detailRange = "30";    // player trend chart: "30" | "all"
-let detailRecent = "7";    // player entries: "7" | "all"
+let teamMode = "week";     // overview summary: "week" | "all"
+let teamTrendRange = "30"; // overview trend chart: "30" | "all"
+let detailRange = "30";    // individual trend chart: "30" | "all"
+let detailRecent = "7";    // individual entries: "7" | "all"
 
 let teamTrend = null, teamCompare = null, detailChart = null, detailScatter = null;
 
@@ -26,13 +28,12 @@ let teamTrend = null, teamCompare = null, detailChart = null, detailScatter = nu
   session = await requireSession();
   if (!session) return;
 
-  // Coaches only — players don't have this screen.
-  const { data: prof } = await db.from("profiles")
-    .select("role").eq("id", session.user.id).single();
-  if (prof?.role !== "coach") { window.location.href = "dashboard.html"; return; }
+  // This screen is for one role only; send anyone else to their own interface.
+  const role = await roleOf(session.user.id);
+  if (role !== R.role) { window.location.href = landingPage(role); return; }
 
   const name = session.user.user_metadata?.username || session.user.email;
-  document.getElementById("page-sub").textContent = `${name} · Coach`;
+  document.getElementById("page-sub").textContent = `${name} · ${cap(R.role)}`;
 
   await loadPlayers();
 })();
@@ -41,12 +42,12 @@ async function loadPlayers() {
   const { data, error } = await db.rpc("get_my_players");
   if (error) {
     document.getElementById("roster").innerHTML =
-      `<div class="empty">Couldn't load players: ${esc(error.message)}</div>`;
+      `<div class="empty">Couldn't load ${R.many}: ${esc(error.message)}</div>`;
     return;
   }
   players = data || [];
 
-  // Pull every player's logs in one query (RLS scopes it to this coach's players).
+  // Pull every athlete's logs in one query (RLS scopes it to this adult's links).
   const ids = players.map(p => p.player_id);
   logsByPlayer = {};
   allPlayerLogs = [];
@@ -70,7 +71,7 @@ async function loadPlayers() {
 async function addPlayer() {
   const input = document.getElementById("player-email");
   const email = input.value.trim();
-  if (!email) { setMsg("add-msg", "Enter a player's email.", "error"); return; }
+  if (!email) { setMsg("add-msg", `Enter a ${R.one}'s email.`, "error"); return; }
 
   const btn = document.getElementById("addBtn");
   btn.disabled = true;
@@ -81,7 +82,7 @@ async function addPlayer() {
   if (error) { setMsg("add-msg", esc(error.message), "error"); return; }
 
   input.value = "";
-  setMsg("add-msg", "Player added.", "ok");
+  setMsg("add-msg", `${cap(R.one)} added.`, "ok");
   await loadPlayers();
 }
 
@@ -92,7 +93,7 @@ async function removePlayer(id) {
   await loadPlayers();
 }
 
-// ---------- Team summary (numbers) ----------
+// ---------- Overview summary (numbers) ----------
 function setTeamMode(mode) {
   teamMode = mode;
   toggleActive("#team-toggle", mode, "mode");
@@ -106,11 +107,11 @@ function renderTeam() {
   const s = summarize(set);
   el.innerHTML = s ? statRows(s)
     : (teamMode === "week"
-        ? "No sessions logged by your players this week."
-        : "No sessions logged by your players yet.");
+        ? `No sessions logged by your ${R.many} this week.`
+        : `No sessions logged by your ${R.many} yet.`);
 }
 
-// ---------- Team trends (avg of every metric across the team) ----------
+// ---------- Overview trends (avg of every metric across the group) ----------
 function setTeamTrendRange(range) {
   teamTrendRange = range;
   toggleActive("#team-trend-toggle", range, "range");
@@ -122,19 +123,19 @@ function renderTeamTrend() {
   if (teamTrend) { teamTrend.destroy(); teamTrend = null; }
 
   const set = teamTrendRange === "all" ? allPlayerLogs : rangeSlice(allPlayerLogs, 30);
-  if (!set.length) { box.innerHTML = '<div class="empty">No player logs to chart yet.</div>'; return; }
+  if (!set.length) { box.innerHTML = `<div class="empty">No ${R.one} logs to chart yet.</div>`; return; }
 
   box.innerHTML = '<canvas id="teamTrendChart"></canvas>';
   const { dates, series } = teamAverageSeries(set);
   teamTrend = multiLineChart("teamTrendChart", dates.map(d => d.slice(5)), k => series[k]);
 }
 
-// ---------- Player comparison (grouped bars) ----------
+// ---------- Comparison (grouped bars) ----------
 function renderTeamCompare() {
   const box = document.getElementById("team-compare-box");
   if (teamCompare) { teamCompare.destroy(); teamCompare = null; }
 
-  if (!players.length) { box.innerHTML = '<div class="empty">Add players to compare them.</div>'; return; }
+  if (!players.length) { box.innerHTML = `<div class="empty">Add ${R.many} to compare them.</div>`; return; }
 
   box.innerHTML = '<canvas id="teamCompareChart"></canvas>';
   const labels = players.map(p => p.username || p.email);
@@ -154,7 +155,7 @@ function renderTeamCompare() {
 function renderRoster() {
   const el = document.getElementById("roster");
   if (!players.length) {
-    el.innerHTML = '<div class="empty">No players yet. Add one by email above.</div>';
+    el.innerHTML = `<div class="empty">No ${R.many} yet. Add one by email above.</div>`;
     return;
   }
   el.innerHTML = players.map(p => {
@@ -171,7 +172,7 @@ function renderRoster() {
         <span class="badge">🔥 ${p.streak_count ?? 0}</span>
         <span class="player-meta">${wk} this wk</span>
         <span class="player-meta">last: ${esc(last)}</span>
-        <button class="row-x" title="Remove player"
+        <button class="row-x" title="Remove ${R.one}"
                 onclick="event.stopPropagation(); removePlayer('${p.player_id}')">✕</button>
       </div>`;
   }).join("");
@@ -196,7 +197,7 @@ function renderDetail() {
   const logs = logsByPlayer[selected] || [];
   const s = summarize(logs);
   document.getElementById("detail-stats").innerHTML =
-    s ? statRows(s) : '<div class="empty">No logs yet for this player.</div>';
+    s ? statRows(s) : `<div class="empty">No logs yet for this ${R.one}.</div>`;
 
   renderDetailTrend();
   renderDetailScatter();
