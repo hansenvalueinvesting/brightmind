@@ -4,11 +4,81 @@
 // ============================================================
 
 let session = null;
+let editId = null;        // set when editing an existing log (?edit=<id>)
+let editLogDate = null;   // preserve the original log_date on edit
 
 (async () => {
   session = await requireSession();
-  if (session) buildSliders();
+  if (!session) return;
+  buildSliders();
+
+  // Edit mode: ?edit=<logId> loads that row and switches Save -> Update.
+  editId = new URLSearchParams(location.search).get("edit");
+  if (editId) await loadForEdit(editId);
 })();
+
+// Pull an existing log and prefill the form. Only the owner may edit it
+// (RLS also enforces this server-side).
+async function loadForEdit(id) {
+  const { data, error } = await db.from("logs").select("*").eq("id", id).single();
+  if (error || !data) { setMsg("Couldn't load that log to edit.", "error"); editId = null; return; }
+  if (data.user_id !== session.user.id) { setMsg("You can only edit your own logs.", "error"); editId = null; return; }
+
+  editLogDate = data.log_date;
+  document.querySelector(".page-title").textContent = "Edit log";
+  document.title = "Edit Log — BrightMind";
+  document.getElementById("saveBtn").textContent = "Update log";
+  fillForm(data);
+}
+
+// Set a plain input/select/textarea value (skips nulls so placeholders remain).
+function setField(id, v) {
+  const el = document.getElementById(id);
+  if (el && v != null) el.value = v;
+}
+
+// Set a 1-10 slider and its live value label.
+function setSlider(id, v) {
+  const el = document.getElementById(id);
+  if (!el || v == null) return;
+  el.value = v;
+  const label = document.getElementById(id + "-val");
+  if (label) label.textContent = v;
+}
+
+function fillForm(l) {
+  document.getElementById("session_type").value = l.session_type;
+  onSessionType();   // reveal/hide match + duration panels to match the type
+
+  if (l.session_type !== "Rest day") {
+    const mins = l.duration_minutes || 0;
+    document.getElementById("duration_h").value = Math.floor(mins / 60);
+    document.getElementById("duration_m").value = mins % 60;
+  }
+
+  setSlider("intensity", l.intensity);
+  setSlider("mood_before", l.mood_before);
+  setSlider("mood_after", l.mood_after);
+  setField("notes", l.notes);
+
+  setSlider("confidence", l.confidence);
+  setSlider("stress", l.stress);
+  setSlider("focus", l.focus);
+  setField("screen_time", l.screen_time_hours);
+
+  setField("sleep_hours", l.sleep_hours);
+  setSlider("sleep_quality", l.sleep_quality);
+  setSlider("soreness", l.soreness);
+
+  if (l.is_match_day) {
+    setField("match_type", l.match_type);
+    setField("tournament_name", l.tournament_name);
+    setField("placement", l.placement);
+    setSlider("perf_rating", l.perf_rating);
+    setSlider("emotional_state", l.emotional_state);
+    setField("reflection", l.reflection);
+  }
+}
 
 // Build all slider rows from their data-attributes (keeps HTML clean).
 function buildSliders() {
@@ -68,7 +138,8 @@ async function saveLog() {
 
   const row = {
     user_id: session.user.id,
-    log_date: new Date().toLocaleDateString("en-CA"), // local YYYY-MM-DD
+    // Editing keeps the original date; a new log is dated today (local YYYY-MM-DD).
+    log_date: editId ? editLogDate : new Date().toLocaleDateString("en-CA"),
     session_type: val("session_type"),
     duration_minutes: isRest ? 0 : durationMinutes(),
     intensity: sld("intensity"),
@@ -90,6 +161,16 @@ async function saveLog() {
     emotional_state:isMatch ? sld("emotional_state") : null,
     reflection:     isMatch ? (val("reflection") || null) : null,
   };
+
+  // Edit mode: update the existing row in place. The streak reflects logging
+  // cadence, so editing an entry leaves it untouched.
+  if (editId) {
+    const { error } = await db.from("logs").update(row).eq("id", editId);
+    if (error) { setMsg(error.message, "error"); btn.disabled = false; return; }
+    setMsg("Updated. Redirecting to your dashboard…", "ok");
+    setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
+    return;
+  }
 
   const { error } = await db.from("logs").insert(row);
   if (error) { setMsg(error.message, "error"); btn.disabled = false; return; }

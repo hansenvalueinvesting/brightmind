@@ -17,6 +17,14 @@ let recentMode = "7";     // recent entries: "7" | "all"
   renderTrend();
   renderRecent();
   renderStats();
+
+  // After a log is removed from the detail modal, drop it locally and repaint.
+  setLogRemovedHandler(id => {
+    logs = logs.filter(l => l.id !== id);
+    renderTrend();
+    renderRecent();
+    renderStats();
+  });
 })();
 
 async function loadProfile() {
@@ -70,12 +78,18 @@ function renderRecent() {
   const set = recentMode === "all" ? ordered : ordered.slice(0, 7);
   if (!set.length) { el.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
   el.innerHTML = set.map(l => `
-    <div class="log-row">
-      <span class="log-date">${l.log_date}</span>
-      <span class="log-type">${l.session_type}</span>
+    <div class="log-row clickable" onclick="openRecent('${l.id}')">
+      <span class="log-date">${esc(l.log_date)}</span>
+      <span class="log-type">${esc(l.session_type)}</span>
       <span class="badge">${l.is_match_day ? "match" : "intensity " + (l.intensity ?? "–")}</span>
     </div>
   `).join("");
+}
+
+// Open the detail modal for a recent entry (the player owns these, so editable).
+function openRecent(id) {
+  const l = logs.find(x => x.id === id);
+  if (l) showLogDetail(l, { editable: true });
 }
 
 // ---------- Summary (this week / all time) ----------
