@@ -260,12 +260,19 @@ function renderDetailRecent() {
   const set = detailRecent === "all" ? ordered : ordered.slice(0, 7);
   el.innerHTML = set.length
     ? set.map(l => `
-        <div class="log-row">
+        <div class="log-row clickable" onclick="openDetailLog('${l.id}')">
           <span class="log-date">${esc(l.log_date)}</span>
           <span class="log-type">${esc(l.session_type)}</span>
           <span class="badge">${l.is_match_day ? "match" : "intensity " + (l.intensity ?? "–")}</span>
         </div>`).join("")
     : '<div class="empty">No entries.</div>';
+}
+
+// Open the detail modal for one of the selected player's entries.
+// Read-only: a coach/parent can view the full log but not edit or remove it.
+function openDetailLog(id) {
+  const l = (logsByPlayer[selected] || []).find(x => x.id === id);
+  if (l) showLogDetail(l, { editable: false });
 }
 
 // ---------- Teams (coach only) ----------

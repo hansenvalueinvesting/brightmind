@@ -81,6 +81,11 @@ create policy "own logs - insert" on public.logs
   for insert with check (auth.uid() = user_id);
 create policy "own logs - update" on public.logs
   for update using (auth.uid() = user_id);
+-- Players may delete their own logs (drop-if-exists so this is safe to add
+-- to an already-provisioned database by re-running just this statement).
+drop policy if exists "own logs - delete" on public.logs;
+create policy "own logs - delete" on public.logs
+  for delete using (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------
 -- AUTO-CREATE PROFILE ON SIGNUP
