@@ -13,7 +13,7 @@ let recentMode = "7";     // recent entries: "7" | "all"
 (async () => {
   session = await requireSession();
   if (!session) return;
-  await Promise.all([loadProfile(), loadLogs()]);
+  await Promise.all([loadProfile(), loadLogs(), loadConnections()]);
   renderTrend();
   renderRecent();
   renderStats();
@@ -43,6 +43,26 @@ async function loadLogs() {
     .select("*").eq("user_id", session.user.id)
     .order("log_date", { ascending: true });
   logs = data || [];
+}
+
+// ---------- Coach / parent this player is linked to ----------
+// N/A when nobody of that role has added them yet. Degrades to N/A if the
+// get_my_adults RPC isn't present on the database.
+async function loadConnections() {
+  const el = document.getElementById("connections");
+  if (!el) return;
+  const { data, error } = await db.rpc("get_my_adults");
+  const byRole = { coach: [], parent: [] };
+  if (!error && data) {
+    for (const a of data) if (byRole[a.role]) byRole[a.role].push(a.name);
+  }
+  const val = names => names.length ? names.map(esc).join(", ") : "N/A";
+  el.classList.remove("hint");
+  el.innerHTML =
+    `<div class="conn-row"><span class="conn-label">Coach</span>` +
+      `<span class="conn-val">${val(byRole.coach)}</span></div>` +
+    `<div class="conn-row"><span class="conn-label">Parent</span>` +
+      `<span class="conn-val">${val(byRole.parent)}</span></div>`;
 }
 
 // ---------- Trends (all metrics at once) ----------

@@ -11,10 +11,16 @@
 const R = Object.assign({ role: "coach", one: "player", many: "players" }, window.ROSTER || {});
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
+// The "other side" of each athlete's link: a coach sees each player's parent,
+// a parent sees each child's coach.
+const CP_ROLE  = R.role === "coach" ? "parent" : "coach";
+const CP_LABEL = cap(CP_ROLE);
+
 let session = null;
 let players = [];          // [{ player_id, email, username, streak_count, last_log_date }]
 let logsByPlayer = {};     // player_id -> logs[] (ascending)
 let allPlayerLogs = [];    // every fetched log row, flat
+let counterparts = {};     // player_id -> [{ adult_id, adult_name }] (their coach/parent)
 let selected = null;       // selected player_id
 
 let teams = [];            // coach's teams (coach view only)
@@ -64,6 +70,14 @@ async function loadPlayers() {
       .select("*").in("user_id", ids).order("log_date", { ascending: true });
     allPlayerLogs = logs || [];
     for (const l of allPlayerLogs) (logsByPlayer[l.user_id] ||= []).push(l);
+  }
+
+  // Who's on the other side of each athlete's link (their coach/parent).
+  // Degrades to empty (→ "N/A") if the get_roster_counterparts RPC is absent.
+  counterparts = {};
+  if (ids.length) {
+    const { data: cps } = await db.rpc("get_roster_counterparts", { p_role: CP_ROLE });
+    for (const c of (cps || [])) (counterparts[c.player_id] ||= []).push(c);
   }
 
   if (selected && !players.some(p => p.player_id === selected)) selected = null;
@@ -177,12 +191,15 @@ function renderRoster() {
     const wk = rangeSlice(logsByPlayer[p.player_id] || [], 7).length;
     const name = p.username || p.email;
     const last = p.last_log_date || "never";
+    const rel = (counterparts[p.player_id] || []).map(c => esc(c.adult_name));
+    const relText = rel.length ? rel.join(", ") : "N/A";
     return `
       <div class="player-row ${selected === p.player_id ? "selected" : ""}"
            onclick="selectPlayer('${p.player_id}')">
         <div class="player-id">
           <span class="player-name">${esc(name)}</span>
           <span class="player-email">${esc(p.email)}</span>
+          <span class="player-rel">${CP_LABEL}: ${relText}</span>
         </div>
         <span class="badge">🔥 ${p.streak_count ?? 0}</span>
         <span class="player-meta">${wk} this wk</span>

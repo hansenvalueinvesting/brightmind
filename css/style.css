@@ -291,6 +291,8 @@ input[type=range]::-moz-range-thumb {
 .player-name { color: var(--ink); }
 .player-email { color: var(--ink-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .player-meta { color: var(--ink-dim); font-size: 12px; white-space: nowrap; }
+/* The athlete's linked coach/parent, shown under their email. */
+.player-rel { color: var(--ink-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
 .row-x {
   background: none; border: 1px solid var(--line); color: var(--ink-dim);
   width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 12px;
@@ -298,6 +300,12 @@ input[type=range]::-moz-range-thumb {
 }
 .row-x:hover { border-color: var(--red); color: var(--red); }
 @media (max-width: 420px) { .player-row .player-meta { display: none; } }
+
+/* ---------- Player: linked coach & parent ---------- */
+.conn-row { display: flex; gap: 12px; padding: 8px 0; }
+.conn-row + .conn-row { border-top: 1px solid var(--line); }
+.conn-label { color: var(--ink-dim); min-width: 72px; }
+.conn-val { color: var(--ink); flex: 1; min-width: 0; }
 
 /* ---------- Coach: teams ---------- */
 .team-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-top: 12px; }

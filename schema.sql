@@ -279,3 +279,50 @@ as $$
 $$;
 
 grant execute on function public.get_my_teams() to authenticated;
+
+-- ----------------------------------------------------------------
+-- RELATIONSHIP LOOKUPS
+-- Let each party see who they're linked to, without exposing the
+-- whole coach_players table (RLS only lets an adult read their own
+-- links, so these run security definer). Safe to re-run.
+-- ----------------------------------------------------------------
+
+-- For the calling PLAYER: the coaches and parents linked to them.
+create or replace function public.get_my_adults()
+returns table (adult_id uuid, name text, role text)
+language sql security definer set search_path = public, auth
+as $$
+  select u.id,
+         coalesce(u.raw_user_meta_data->>'username', u.email),
+         pr.role
+  from public.coach_players cp
+  join public.profiles pr on pr.id = cp.coach_id
+  join auth.users u       on u.id = cp.coach_id
+  where cp.player_id = auth.uid()
+    and pr.role in ('coach', 'parent')
+  order by pr.role, lower(coalesce(u.raw_user_meta_data->>'username', u.email));
+$$;
+
+-- For the calling ADULT (coach or parent): for each athlete on their
+-- roster, the OTHER adults of role p_role linked to that same athlete.
+-- A parent passes 'coach' to see each child's coach; a coach passes
+-- 'parent' to see each player's parent.
+create or replace function public.get_roster_counterparts(p_role text)
+returns table (player_id uuid, adult_id uuid, adult_name text)
+language sql security definer set search_path = public, auth
+as $$
+  select other.player_id,
+         u.id,
+         coalesce(u.raw_user_meta_data->>'username', u.email)
+  from public.coach_players mine
+  join public.coach_players other
+       on other.player_id = mine.player_id
+      and other.coach_id <> mine.coach_id
+  join public.profiles pr on pr.id = other.coach_id and pr.role = p_role
+  join auth.users u       on u.id = other.coach_id
+  where mine.coach_id = auth.uid()
+  order by other.player_id, lower(coalesce(u.raw_user_meta_data->>'username', u.email));
+$$;
+
+grant execute on function public.get_my_adults() to authenticated;
+grant execute on function public.get_roster_counterparts(text) to authenticated;
