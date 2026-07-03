@@ -13,7 +13,8 @@ function renderSiteCredit() {
   const el = document.createElement("footer");
   el.className = "site-credit";
   el.innerHTML =
-    'Built by Brighten Ng and ' +
+    'Built by ' +
+    '<a href="https://brightenng" target="_blank" rel="noopener">Brighten Ng</a> and ' +
     '<a href="https://github.com/hansenvalueinvesting" target="_blank" rel="noopener">Hansen Zheng</a>';
   document.body.appendChild(el);
 }
