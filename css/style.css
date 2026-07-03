@@ -364,5 +364,7 @@ input[type=range]::-moz-range-thumb {
   font-size: 12px;
   text-align: center;
 }
-.site-credit a { color: var(--ink-dim); }
-.site-credit a:hover { color: var(--amber); }
+/* Amber + underline from the start so the credit link reads as a link,
+   not just on hover. */
+.site-credit a { color: var(--amber); text-decoration: underline; }
+.site-credit a:hover { text-decoration: none; }
