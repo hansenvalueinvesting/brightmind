@@ -32,6 +32,10 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  /* Column layout lets the credit footer sit at the bottom of the viewport
+     even when the page content is short (see .site-credit margin-top). */
+  display: flex;
+  flex-direction: column;
 }
 
 h1, h2, h3, .display { font-family: var(--display); letter-spacing: -0.01em; }
@@ -42,7 +46,7 @@ a:hover { text-decoration: underline; }
 /* ---------- Layout shells ---------- */
 .auth-wrap {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; padding: 24px;
+  flex: 1 0 auto; padding: 24px;
 }
 .app-wrap { max-width: 960px; margin: 0 auto; padding: 0 20px 80px; }
 
@@ -350,7 +354,10 @@ input[type=range]::-moz-range-thumb {
 /* ---------- Site credit footer ---------- */
 .site-credit {
   max-width: 960px;
-  margin: 0 auto;
+  width: 100%;
+  /* margin-top:auto pushes the footer to the bottom of the flex-column body,
+     so it stays visible even when the page above it is short. */
+  margin: auto auto 0;
   padding: 20px;
   border-top: 1px solid var(--line);
   color: var(--ink-dim);
