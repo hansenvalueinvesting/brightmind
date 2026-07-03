@@ -7,6 +7,18 @@
 const SUPABASE_URL  = "https://ebyhwddmxoqngvqbgkoo.supabase.co/";       // e.g. https://abcxyz.supabase.co
 const SUPABASE_ANON = "sb_publishable_9eAwOE5IexKgr_KezmmQwg_UPYXr3R1";  // the long "anon public" key
 
+// Site credit — appears in the footer of every page (this file loads everywhere).
+// Registered up top so it renders even if Supabase/the CDN below fails to load.
+function renderSiteCredit() {
+  const el = document.createElement("footer");
+  el.className = "site-credit";
+  el.innerHTML =
+    'Built by Brighten Ng and ' +
+    '<a href="https://github.com/hansenvalueinvesting" target="_blank" rel="noopener">Hansen Zheng</a>';
+  document.body.appendChild(el);
+}
+document.addEventListener("DOMContentLoaded", renderSiteCredit);
+
 // Guard: if keys aren't pasted yet, show a clear banner instead of a blank page.
 let db;
 let dbReady = false;

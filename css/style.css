@@ -346,3 +346,16 @@ input[type=range]::-moz-range-thumb {
   .brand { font-size: 16px; }
   .nav { gap: 10px 12px; }
 }
+
+/* ---------- Site credit footer ---------- */
+.site-credit {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-dim);
+  font-size: 12px;
+  text-align: center;
+}
+.site-credit a { color: var(--ink-dim); }
+.site-credit a:hover { color: var(--amber); }
