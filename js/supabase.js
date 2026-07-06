@@ -29,7 +29,7 @@ if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) || SUPABASE_ANON.startsWit
     bar.style.cssText =
       "position:fixed;top:0;left:0;right:0;z-index:999;background:#f85149;color:#1a0000;" +
       "font:600 14px/1.4 'IBM Plex Mono',monospace;padding:12px 16px;text-align:center;";
-    bar.textContent = "Supabase keys not set — open js/supabase.js and paste your Project URL and anon key. See README step 4.";
+    bar.textContent = "Supabase keys not set — open js/supabase.js and paste your Project URL and anon key.";
     document.body.prepend(bar);
   });
   // A harmless stub so pages don't throw before keys are added.
