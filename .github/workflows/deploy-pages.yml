@@ -1,0 +1,43 @@
+name: Deploy static site to Pages
+
+on:
+  # Deploy on every push to main.
+  push:
+    branches: [main]
+  # Allow manually re-running a deploy from the Actions tab.
+  workflow_dispatch:
+
+# Least-privilege token: only what Pages deployment needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Serialize deploys, but let a newer run cancel an older/stuck one instead
+# of queuing behind it. This is what prevents the "queued for days" jam.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # The site is plain static files served from the repo root.
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
