@@ -46,11 +46,12 @@ async function loadAll() {
   const [{ data: fr }, { data: rq }, { data: prof }] = await Promise.all([
     db.rpc("get_my_friends"),
     db.rpc("get_friend_requests"),
-    db.from("profiles").select("streak_count").eq("id", me).single(),
+    db.from("profiles").select("streak_count, last_log_date").eq("id", me).single(),
   ]);
   friends  = fr || [];
   requests = rq || [];
-  myStreak = prof?.streak_count ?? 0;
+  // Live streak (0 once a day is missed), not the stale stored count.
+  myStreak = effectiveStreak(prof?.streak_count, prof?.last_log_date);
 
   // Pull logs + sleep for me and every friend in one query each. RLS scopes
   // this to my own rows plus friends I've accepted; merge sleep by date so
@@ -159,7 +160,7 @@ function renderFriends() {
           <span class="player-name">${name}</span>
           <span class="player-email">${esc(f.email)}</span>
         </div>
-        <span class="badge">🔥 ${f.streak_count ?? 0}</span>
+        <span class="badge">🔥 ${effectiveStreak(f.streak_count, f.last_log_date)}</span>
         <span class="player-meta">${wk} this wk</span>
         <span class="player-meta">last: ${esc(last)}</span>
         <button class="row-x" title="Remove friend"
@@ -202,7 +203,7 @@ function renderCompare() {
   document.getElementById("compare-summary").innerHTML =
     `<div class="grid-2">
        ${column("You", myStreak, myLogs)}
-       ${column(friendName, f?.streak_count ?? 0, friendLogs)}
+       ${column(friendName, effectiveStreak(f?.streak_count, f?.last_log_date), friendLogs)}
      </div>`;
 
   // Grouped bars: one metric per group, your bar vs. theirs.

@@ -206,7 +206,7 @@ function renderRoster() {
           <span class="player-email">${esc(p.email)}</span>
           <span class="player-rel">${CP_LABEL}: ${relText}</span>
         </div>
-        <span class="badge">🔥 ${p.streak_count ?? 0}</span>
+        <span class="badge">🔥 ${effectiveStreak(p.streak_count, p.last_log_date)}</span>
         <span class="player-meta">${wk} this wk</span>
         <span class="player-meta">last: ${esc(last)}</span>
         <button class="row-x" title="Remove ${R.one}"
@@ -321,7 +321,7 @@ function renderTeams() {
     const chips = ids.map(pid => {
       const p = players.find(x => x.player_id === pid);
       const name = p ? (p.username || p.email) : "(removed)";
-      const streak = p ? (p.streak_count ?? 0) : 0;
+      const streak = p ? effectiveStreak(p.streak_count, p.last_log_date) : 0;
       return `<span class="team-chip">${esc(name)} · 🔥${streak}
         <button class="chip-x" title="Remove from team"
                 onclick="removeFromTeam('${t.id}','${pid}')">✕</button></span>`;
