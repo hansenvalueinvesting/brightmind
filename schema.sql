@@ -47,11 +47,16 @@ create table public.logs (
   sleep_quality      integer,
   soreness           integer,
 
-  -- Tournament (nullable; only on match day)
+  -- Match (nullable; only on match day)
   is_match_day       boolean not null default false,
+  opponent_level     numeric(4,2),    -- opponent rating, e.g. 5.01
+  final_score        text,            -- best-of-five games, e.g. '3-1', '0-3'
+  perf_rating        integer,
+  -- Legacy match columns, no longer captured by the log form (kept so old
+  -- rows still read back). tournament_name / placement / emotional_state /
+  -- reflection / match_type live below and via the add-column migration.
   tournament_name    text,
   placement          text,
-  perf_rating        integer,
   emotional_state    integer,
   reflection         text,
 
@@ -217,9 +222,18 @@ grant execute on function public.get_my_players() to authenticated;
 
 -- ----------------------------------------------------------------
 -- MATCH TYPE
--- Tournament / practice / school-league, captured on match-day logs.
+-- Tournament / practice / school-league. Legacy: no longer captured by
+-- the log form, but the column stays so old rows still read back.
 -- ----------------------------------------------------------------
 alter table public.logs add column if not exists match_type text;
+
+-- ----------------------------------------------------------------
+-- MATCH DETAILS
+-- The match panel now captures just opponent level (rating), final score
+-- (best-of-five games), and self-rated performance. Safe to re-run.
+-- ----------------------------------------------------------------
+alter table public.logs add column if not exists opponent_level numeric(4,2);
+alter table public.logs add column if not exists final_score    text;
 
 -- ----------------------------------------------------------------
 -- TEAMS

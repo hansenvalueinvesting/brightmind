@@ -81,13 +81,10 @@ function logDetailHTML(l, editable) {
 
   if (l.is_match_day) {
     html += dSection("Match", [
-      dRow("Match type", l.match_type),
-      dRow("Event / opponent", l.tournament_name),
-      dRow("Placement", l.placement),
+      dRow("Opponent level", l.opponent_level),
+      dRow("Final score", l.final_score),
       dRow("Self-rated performance", s("perf_rating")),
-      dRow("Emotional state", s("emotional_state")),
     ]);
-    html += dNote("Reflection", l.reflection);
   }
 
   if (editable) {
