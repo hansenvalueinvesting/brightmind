@@ -66,8 +66,6 @@ function fillForm(l) {
   setSlider("focus", l.focus);
   setField("screen_time", l.screen_time_hours);
 
-  setField("sleep_hours", l.sleep_hours);
-  setSlider("sleep_quality", l.sleep_quality);
   setSlider("soreness", l.soreness);
 
   if (l.is_match_day) {
@@ -150,8 +148,7 @@ async function saveLog() {
     stress: sld("stress"),
     focus: sld("focus"),
     screen_time_hours: num("screen_time"),
-    sleep_hours: num("sleep_hours"),
-    sleep_quality: sld("sleep_quality"),
+    // Sleep is captured once a day on the dashboard (sleep_entries), not here.
     soreness: sld("soreness"),
     is_match_day: isMatch,
     match_type:     isMatch ? val("match_type") : null,

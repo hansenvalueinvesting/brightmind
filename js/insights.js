@@ -13,14 +13,24 @@ let session = null;
 })();
 
 async function load() {
-  const { data } = await db.from("logs")
-    .select("sleep_hours, perf_rating, mood_after, is_match_day")
-    .eq("user_id", session.user.id);
+  // Sleep now lives in its own once-a-day table; pull it alongside the logs and
+  // match by date. Fall back to any legacy sleep_hours still on old log rows.
+  const [{ data }, { data: sleep }] = await Promise.all([
+    db.from("logs")
+      .select("log_date, sleep_hours, perf_rating, mood_after, is_match_day")
+      .eq("user_id", session.user.id),
+    db.from("sleep_entries")
+      .select("entry_date, sleep_hours")
+      .eq("user_id", session.user.id),
+  ]);
+
+  const sleepByDate = {};
+  for (const s of (sleep || [])) sleepByDate[s.entry_date] = s.sleep_hours;
 
   // Build points: need sleep + a performance value.
   const points = (data || [])
     .map(l => ({
-      x: l.sleep_hours,
+      x: sleepByDate[l.log_date] != null ? sleepByDate[l.log_date] : l.sleep_hours,
       y: l.is_match_day && l.perf_rating != null ? l.perf_rating : l.mood_after
     }))
     .filter(p => p.x != null && p.y != null);

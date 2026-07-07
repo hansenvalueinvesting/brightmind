@@ -61,14 +61,19 @@ async function loadPlayers() {
   }
   players = data || [];
 
-  // Pull every athlete's logs in one query (RLS scopes it to this adult's links).
+  // Pull every athlete's logs (and their once-a-day sleep entries) in one query
+  // each; RLS scopes both to this adult's links. Merge sleep onto the logs by
+  // date so the sleep-quality bars and sleep-vs-performance scatter still work.
   const ids = players.map(p => p.player_id);
   logsByPlayer = {};
   allPlayerLogs = [];
   if (ids.length) {
-    const { data: logs } = await db.from("logs")
-      .select("*").in("user_id", ids).order("log_date", { ascending: true });
+    const [{ data: logs }, { data: sleep }] = await Promise.all([
+      db.from("logs").select("*").in("user_id", ids).order("log_date", { ascending: true }),
+      db.from("sleep_entries").select("*").in("user_id", ids),
+    ]);
     allPlayerLogs = logs || [];
+    attachSleep(allPlayerLogs, sleep || []);
     for (const l of allPlayerLogs) (logsByPlayer[l.user_id] ||= []).push(l);
   }
 

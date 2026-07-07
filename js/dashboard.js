@@ -5,10 +5,16 @@
 
 let session = null;
 let logs = [];            // every log for this user, ascending by date
+let sleepEntries = [];    // this user's once-a-day sleep rows
+let todaySleep = null;    // today's sleep_entries row, or null if not recorded
+let sleepEditing = false; // show the input form even when today is already recorded
 let trend = null;         // Chart instance
 let statsMode = "week";   // summary: "week" | "all"
 let trendRange = "30";    // trends: "30" | "all"
 let recentMode = "7";     // recent entries: "7" | "all"
+
+// Local calendar day as YYYY-MM-DD (matches the log_date convention in log.js).
+const todayStr = () => new Date().toLocaleDateString("en-CA");
 
 (async () => {
   session = await requireSession();
@@ -17,6 +23,7 @@ let recentMode = "7";     // recent entries: "7" | "all"
   renderTrend();
   renderRecent();
   renderStats();
+  renderSleepCard();
 
   // After a log is removed from the detail modal, drop it locally and repaint.
   setLogRemovedHandler(id => {
@@ -39,10 +46,86 @@ async function loadProfile() {
 }
 
 async function loadLogs() {
-  const { data } = await db.from("logs")
-    .select("*").eq("user_id", session.user.id)
-    .order("log_date", { ascending: true });
-  logs = data || [];
+  const [{ data: logData }, { data: sleepData }] = await Promise.all([
+    db.from("logs").select("*").eq("user_id", session.user.id)
+      .order("log_date", { ascending: true }),
+    db.from("sleep_entries").select("*").eq("user_id", session.user.id),
+  ]);
+  logs = logData || [];
+  sleepEntries = sleepData || [];
+  attachSleep(logs, sleepEntries);   // merge each day's sleep onto its logs
+  todaySleep = sleepEntries.find(s => s.entry_date === todayStr()) || null;
+}
+
+// ---------- Once-a-day sleep entry ----------
+// Sleep lives in its own table now; this card records last night once per day.
+function renderSleepCard() {
+  const el = document.getElementById("sleep-card");
+  if (!el) return;
+  el.classList.remove("hint");
+
+  if (todaySleep && !sleepEditing) {
+    const h = todaySleep.sleep_hours != null ? `${todaySleep.sleep_hours}h` : "–";
+    const q = todaySleep.sleep_quality != null ? `quality ${todaySleep.sleep_quality}/10` : "–";
+    el.innerHTML =
+      `<div class="log-row"><span class="log-date">Recorded today</span><span>${h} · ${q}</span></div>` +
+      `<button class="btn btn-ghost" style="margin-top:14px;" onclick="editSleep()">Update</button>`;
+    return;
+  }
+
+  const hours = todaySleep?.sleep_hours ?? "";
+  const qual  = todaySleep?.sleep_quality ?? 5;
+  el.innerHTML = `
+    <div class="field">
+      <label for="sleep_hours">Sleep last night (hours)</label>
+      <input type="number" id="sleep_hours" min="0" max="24" step="0.5" placeholder="e.g. 7.5" value="${hours}">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head">
+        <label for="sleep_quality">Sleep quality</label>
+        <span class="slider-val" id="sleep_quality-val">${qual}</span>
+      </div>
+      <input type="range" id="sleep_quality" min="1" max="10" value="${qual}"
+             oninput="document.getElementById('sleep_quality-val').textContent=this.value">
+      <div class="slider-scale"><span>1 · very poor</span><span>excellent · 10</span></div>
+    </div>
+    <button class="btn" id="sleepSaveBtn" style="margin-top:6px;" onclick="saveSleep()">Save sleep</button>
+    <div class="msg" id="sleep-msg"></div>`;
+}
+
+function editSleep() { sleepEditing = true; renderSleepCard(); }
+
+async function saveSleep() {
+  const btn = document.getElementById("sleepSaveBtn");
+  const msg = document.getElementById("sleep-msg");
+  if (btn) btn.disabled = true;
+
+  const hoursRaw = document.getElementById("sleep_hours").value;
+  const hours = hoursRaw === "" ? null : parseFloat(hoursRaw);
+  const row = {
+    user_id: session.user.id,
+    entry_date: todayStr(),
+    sleep_hours: (hours == null || isNaN(hours)) ? null : hours,
+    sleep_quality: parseInt(document.getElementById("sleep_quality").value, 10),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await db.from("sleep_entries")
+    .upsert(row, { onConflict: "user_id,entry_date" }).select().single();
+  if (error) {
+    if (msg) { msg.textContent = error.message; msg.className = "msg error"; }
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  // Update local state so trends/summary reflect today's sleep without a reload.
+  todaySleep = data;
+  sleepEntries = sleepEntries.filter(s => s.entry_date !== data.entry_date).concat(data);
+  attachSleep(logs, sleepEntries);
+  sleepEditing = false;
+  renderSleepCard();
+  renderTrend();
+  renderStats();
 }
 
 // ---------- Coach / parent this player is linked to ----------

@@ -73,3 +73,58 @@ grant execute on function public.get_roster_counterparts(text) to authenticated;
 
 Until this is applied, the UI degrades gracefully: parents get an "only coaches"
 error when adding a child, and coach/parent names show as **N/A**.
+
+---
+
+## 2026-07 — Sleep as a once-a-day entry
+
+Covers: moving sleep duration & quality off every `logs` row into their own
+`sleep_entries` table, captured once per calendar day from the Home dashboard.
+No backfill — existing sleep stays on old `logs` rows and still renders.
+
+Run this whole block once:
+
+```sql
+create table if not exists public.sleep_entries (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  entry_date    date not null default current_date,
+  sleep_hours   numeric(4,1),
+  sleep_quality integer,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  unique (user_id, entry_date)
+);
+
+create index if not exists sleep_entries_user_date_idx
+  on public.sleep_entries (user_id, entry_date desc);
+
+alter table public.sleep_entries enable row level security;
+
+drop policy if exists "own sleep - select" on public.sleep_entries;
+create policy "own sleep - select" on public.sleep_entries
+  for select using (auth.uid() = user_id);
+drop policy if exists "own sleep - insert" on public.sleep_entries;
+create policy "own sleep - insert" on public.sleep_entries
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "own sleep - update" on public.sleep_entries;
+create policy "own sleep - update" on public.sleep_entries
+  for update using (auth.uid() = user_id);
+drop policy if exists "own sleep - delete" on public.sleep_entries;
+create policy "own sleep - delete" on public.sleep_entries
+  for delete using (auth.uid() = user_id);
+
+drop policy if exists "coach reads player sleep" on public.sleep_entries;
+create policy "coach reads player sleep" on public.sleep_entries
+  for select using (
+    exists (
+      select 1 from public.coach_players cp
+      where cp.coach_id = auth.uid() and cp.player_id = sleep_entries.user_id
+    )
+  );
+```
+
+Until this is applied, the dashboard sleep card can't save (Supabase returns a
+missing-relation error) and sleep-based charts show only legacy per-log values.
+The old `logs.sleep_hours` / `logs.sleep_quality` columns are intentionally left
+in place — nothing needs to be dropped.
