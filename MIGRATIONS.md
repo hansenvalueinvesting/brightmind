@@ -11,6 +11,145 @@ Everything below is safe to re-run (`create or replace` / `grant`).
 
 ---
 
+## 2026-07 — Player friend system
+
+Covers: peer-to-peer friends. Players send/accept/decline friend requests, add
+and remove friends, and compare stats. Adds a `friendships` table, RLS so friends
+can read each other's `logs` / `sleep_entries`, and the RPCs the Friends tab uses.
+
+Run this whole block once:
+
+```sql
+create table if not exists public.friendships (
+  id           uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references auth.users(id) on delete cascade,
+  addressee_id uuid not null references auth.users(id) on delete cascade,
+  status       text not null default 'pending',   -- 'pending' | 'accepted'
+  created_at   timestamptz not null default now(),
+  responded_at timestamptz,
+  unique (requester_id, addressee_id)
+);
+create index if not exists friendships_requester_idx on public.friendships (requester_id);
+create index if not exists friendships_addressee_idx on public.friendships (addressee_id);
+
+alter table public.friendships enable row level security;
+
+drop policy if exists "friendship - select own" on public.friendships;
+create policy "friendship - select own" on public.friendships
+  for select using (auth.uid() in (requester_id, addressee_id));
+drop policy if exists "friendship - insert own" on public.friendships;
+create policy "friendship - insert own" on public.friendships
+  for insert with check (auth.uid() = requester_id);
+drop policy if exists "friendship - update addressee" on public.friendships;
+create policy "friendship - update addressee" on public.friendships
+  for update using (auth.uid() = addressee_id);
+drop policy if exists "friendship - delete own" on public.friendships;
+create policy "friendship - delete own" on public.friendships
+  for delete using (auth.uid() in (requester_id, addressee_id));
+
+drop policy if exists "friends read logs" on public.logs;
+create policy "friends read logs" on public.logs
+  for select using (
+    exists (select 1 from public.friendships f
+      where f.status = 'accepted'
+        and ((f.requester_id = auth.uid() and f.addressee_id = logs.user_id)
+          or (f.addressee_id = auth.uid() and f.requester_id = logs.user_id))));
+
+drop policy if exists "friends read sleep" on public.sleep_entries;
+create policy "friends read sleep" on public.sleep_entries
+  for select using (
+    exists (select 1 from public.friendships f
+      where f.status = 'accepted'
+        and ((f.requester_id = auth.uid() and f.addressee_id = sleep_entries.user_id)
+          or (f.addressee_id = auth.uid() and f.requester_id = sleep_entries.user_id))));
+
+create or replace function public.send_friend_request(p_email text)
+returns table (friend_id uuid, email text, username text, status text)
+language plpgsql security definer set search_path = public, auth
+as $$
+declare v_uid uuid; v_existing text;
+begin
+  select u.id into v_uid from auth.users u where lower(u.email) = lower(trim(p_email));
+  if v_uid is null then raise exception 'No BrightMind account found for that email'; end if;
+  if v_uid = auth.uid() then raise exception 'You cannot add yourself as a friend'; end if;
+  select f.status into v_existing from public.friendships f
+    where (f.requester_id = auth.uid() and f.addressee_id = v_uid)
+       or (f.requester_id = v_uid and f.addressee_id = auth.uid()) limit 1;
+  if v_existing = 'accepted' then raise exception 'You are already friends';
+  elsif exists (select 1 from public.friendships f
+                where f.requester_id = v_uid and f.addressee_id = auth.uid() and f.status = 'pending') then
+    update public.friendships set status = 'accepted', responded_at = now()
+      where requester_id = v_uid and addressee_id = auth.uid();
+  elsif v_existing = 'pending' then raise exception 'Friend request already sent';
+  else
+    insert into public.friendships (requester_id, addressee_id, status) values (auth.uid(), v_uid, 'pending');
+  end if;
+  return query select u.id, u.email::text, (u.raw_user_meta_data->>'username'),
+    (select f.status from public.friendships f
+       where (f.requester_id = auth.uid() and f.addressee_id = v_uid)
+          or (f.requester_id = v_uid and f.addressee_id = auth.uid()) limit 1)
+    from auth.users u where u.id = v_uid;
+end; $$;
+
+create or replace function public.respond_friend_request(p_requester uuid, p_accept boolean)
+returns void language plpgsql security definer set search_path = public, auth
+as $$
+begin
+  if p_accept then
+    update public.friendships set status = 'accepted', responded_at = now()
+      where requester_id = p_requester and addressee_id = auth.uid() and status = 'pending';
+  else
+    delete from public.friendships
+      where requester_id = p_requester and addressee_id = auth.uid() and status = 'pending';
+  end if;
+end; $$;
+
+create or replace function public.remove_friend(p_friend uuid)
+returns void language plpgsql security definer set search_path = public, auth
+as $$
+begin
+  delete from public.friendships
+    where (requester_id = auth.uid() and addressee_id = p_friend)
+       or (requester_id = p_friend and addressee_id = auth.uid());
+end; $$;
+
+create or replace function public.get_my_friends()
+returns table (friend_id uuid, email text, username text, streak_count int, last_log_date date)
+language sql security definer set search_path = public, auth
+as $$
+  select u.id, u.email::text, (u.raw_user_meta_data->>'username'), p.streak_count, p.last_log_date
+  from public.friendships f
+  join auth.users u on u.id = case when f.requester_id = auth.uid() then f.addressee_id else f.requester_id end
+  left join public.profiles p on p.id = u.id
+  where f.status = 'accepted' and (f.requester_id = auth.uid() or f.addressee_id = auth.uid())
+  order by lower(coalesce(u.raw_user_meta_data->>'username', u.email));
+$$;
+
+create or replace function public.get_friend_requests()
+returns table (other_id uuid, email text, username text, direction text, requested_at timestamptz)
+language sql security definer set search_path = public, auth
+as $$
+  select case when f.requester_id = auth.uid() then f.addressee_id else f.requester_id end,
+         u.email::text, (u.raw_user_meta_data->>'username'),
+         case when f.requester_id = auth.uid() then 'outgoing' else 'incoming' end, f.created_at
+  from public.friendships f
+  join auth.users u on u.id = case when f.requester_id = auth.uid() then f.addressee_id else f.requester_id end
+  where f.status = 'pending' and (f.requester_id = auth.uid() or f.addressee_id = auth.uid())
+  order by f.created_at desc;
+$$;
+
+grant execute on function public.send_friend_request(text)             to authenticated;
+grant execute on function public.respond_friend_request(uuid, boolean) to authenticated;
+grant execute on function public.remove_friend(uuid)                   to authenticated;
+grant execute on function public.get_my_friends()                      to authenticated;
+grant execute on function public.get_friend_requests()                 to authenticated;
+```
+
+Until this is applied, the Friends tab loads but adding a friend fails with a
+missing-function error and the friend/request lists stay empty.
+
+---
+
 ## 2026-07 — Adult roles & relationship lookups
 
 Covers: the parent "can't add a child" fix, and showing each party who they're
