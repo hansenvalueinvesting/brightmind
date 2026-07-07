@@ -600,3 +600,118 @@ grant execute on function public.respond_friend_request(uuid, boolean) to authen
 grant execute on function public.remove_friend(uuid)                   to authenticated;
 grant execute on function public.get_my_friends()                      to authenticated;
 grant execute on function public.get_friend_requests()                 to authenticated;
+
+-- ----------------------------------------------------------------
+-- ADMIN DASHBOARD
+-- A private, password-gated overview of EVERY user, their account
+-- info + player stats, and the full relationship graph (who coaches
+-- / parents / is friends with whom). Reached at the site's /admin URL.
+--
+-- These run `security definer` so they can read across all users
+-- (bypassing RLS), and are granted to `anon` because the admin visitor
+-- is typically NOT logged in. The shared password is checked INSIDE
+-- each function, so the data — not just the UI — is gated: a caller
+-- who doesn't send the right password gets nothing back.
+--
+-- NOTE: a static site can't keep a secret. The password lives in the
+-- client JS (to send it here) and can be read by anyone who views
+-- source; treat this as a light gate for a trusted operator's own
+-- tool, not hard security. Rotate it by editing the literal in BOTH
+-- this file (re-run in the SQL Editor) and js/admin.js. Safe to re-run.
+-- ----------------------------------------------------------------
+
+-- Every user: identity, role, account timestamps, and — for players —
+-- aggregate stats computed across their logs and sleep entries.
+create or replace function public.admin_overview(p_pass text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  result jsonb;
+begin
+  if p_pass is distinct from 'BingBoingChing' then
+    raise exception 'Unauthorized';
+  end if;
+
+  select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb) into result from (
+    select
+      u.id,
+      u.email::text                              as email,
+      (u.raw_user_meta_data->>'username')        as username,
+      coalesce(pr.role, 'player')                as role,
+      u.created_at,
+      u.last_sign_in_at,
+      pr.consent_at,
+      coalesce(pr.streak_count, 0)               as streak_count,
+      pr.last_log_date,
+      -- Player stats (null/zero for adults, who don't keep logs).
+      (select count(*) from public.logs l where l.user_id = u.id)                                            as log_count,
+      (select count(*) from public.logs l where l.user_id = u.id and l.is_match_day)                         as match_count,
+      (select coalesce(sum(l.duration_minutes), 0) from public.logs l where l.user_id = u.id)                as total_minutes,
+      (select max(l.log_date) from public.logs l where l.user_id = u.id)                                     as last_log,
+      (select round(avg(l.confidence)::numeric, 1) from public.logs l where l.user_id = u.id and l.confidence is not null) as avg_confidence,
+      (select round(avg(l.focus)::numeric, 1)      from public.logs l where l.user_id = u.id and l.focus is not null)      as avg_focus,
+      (select round(avg(l.stress)::numeric, 1)     from public.logs l where l.user_id = u.id and l.stress is not null)     as avg_stress,
+      (select round(avg(l.intensity)::numeric, 1)  from public.logs l where l.user_id = u.id and l.intensity is not null)  as avg_intensity,
+      (select round(avg(s.sleep_hours)::numeric, 1)   from public.sleep_entries s where s.user_id = u.id and s.sleep_hours is not null)   as avg_sleep_hours,
+      (select round(avg(s.sleep_quality)::numeric, 1) from public.sleep_entries s where s.user_id = u.id and s.sleep_quality is not null) as avg_sleep_quality
+    from auth.users u
+    left join public.profiles pr on pr.id = u.id
+    order by coalesce(pr.role, 'player'),
+             lower(coalesce(u.raw_user_meta_data->>'username', u.email))
+  ) t;
+
+  return result;
+end;
+$$;
+
+-- The relationship graph: one node per user, plus edges for every
+-- coach/parent -> player link (edge `type` is the adult's role) and
+-- every accepted player <-> player friendship (`type` = 'friend').
+create or replace function public.admin_relationships(p_pass text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  nodes jsonb;
+  edges jsonb;
+begin
+  if p_pass is distinct from 'BingBoingChing' then
+    raise exception 'Unauthorized';
+  end if;
+
+  select coalesce(jsonb_agg(row_to_json(n)), '[]'::jsonb) into nodes from (
+    select u.id,
+           coalesce(u.raw_user_meta_data->>'username', u.email) as name,
+           u.email::text                                        as email,
+           coalesce(pr.role, 'player')                          as role
+    from auth.users u
+    left join public.profiles pr on pr.id = u.id
+  ) n;
+
+  select coalesce(jsonb_agg(row_to_json(e)), '[]'::jsonb) into edges from (
+    -- Adult -> player links; the adult's role labels the edge.
+    select cp.coach_id as source,
+           cp.player_id as target,
+           coalesce(pr.role, 'coach') as type
+    from public.coach_players cp
+    left join public.profiles pr on pr.id = cp.coach_id
+    union all
+    -- Accepted player <-> player friendships.
+    select f.requester_id as source,
+           f.addressee_id  as target,
+           'friend'        as type
+    from public.friendships f
+    where f.status = 'accepted'
+  ) e;
+
+  return jsonb_build_object('nodes', nodes, 'edges', edges);
+end;
+$$;
+
+grant execute on function public.admin_overview(text)      to anon, authenticated;
+grant execute on function public.admin_relationships(text) to anon, authenticated;

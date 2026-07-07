@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — BrightMind</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0e1116">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div class="gate-overlay" id="gate">
+  <div class="panel gate-card">
+    <div class="gate-lock">🔒</div>
+    <div class="brand brand-auth" style="margin-bottom:6px; font-size:20px; justify-content:center;">
+      <img class="brand-logo" src="../assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span>
+    </div>
+    <p class="hint" style="text-align:center; margin-bottom:20px;">Admin access — enter password.</p>
+    <div class="field">
+      <label for="gate-pass">Password</label>
+      <input type="password" id="gate-pass" autocomplete="off" placeholder="••••••••">
+    </div>
+    <button class="btn" id="gate-btn">Unlock</button>
+    <div class="msg" id="gate-msg"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD (revealed after unlock) -->
+<div id="dash" class="section-hidden">
+  <div class="admin-bar">
+    <div class="brand">
+      <img class="brand-logo" src="../assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span>
+      <span class="tag">Admin</span>
+    </div>
+    <button class="btn btn-ghost" id="lock-btn" style="width:auto; padding:8px 14px;">Lock</button>
+  </div>
+
+  <div class="admin-wrap">
+    <h1 class="page-title">Admin Dashboard</h1>
+    <div class="page-sub" id="dash-sub">Loading…</div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="users" id="tab-users">Users</button>
+      <button class="admin-tab" data-tab="network" id="tab-network">Relationship map</button>
+    </div>
+
+    <!-- USERS TAB -->
+    <section id="panel-users">
+      <div class="admin-search">
+        <input type="text" id="user-search" placeholder="Search by name or email…" autocomplete="off">
+      </div>
+      <div id="users-body"><div class="empty">Loading users…</div></div>
+    </section>
+
+    <!-- NETWORK TAB -->
+    <section id="panel-network" class="section-hidden">
+      <div class="panel">
+        <div class="net-toolbar">
+          <div class="net-legend">
+            <span class="legend-item"><span class="legend-swatch" style="background:#ffb000"></span>Player</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#58a6ff"></span>Coach</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#bc8cff"></span>Parent</span>
+            <span class="legend-item"><span class="legend-line" style="background:#58a6ff"></span>Coaches</span>
+            <span class="legend-item"><span class="legend-line" style="background:#bc8cff"></span>Parents</span>
+            <span class="legend-item"><span class="legend-line" style="background:#3fb950"></span>Friends</span>
+          </div>
+          <div class="toggle" id="net-filter" style="margin-left:auto;">
+            <button class="toggle-btn active" data-filter="all">All users</button>
+            <button class="toggle-btn" data-filter="connected">Connected only</button>
+          </div>
+        </div>
+        <div class="net-box" id="net-box">
+          <canvas id="net-canvas"></canvas>
+          <div class="net-tooltip" id="net-tooltip"></div>
+        </div>
+        <div class="net-hint">Drag any node to reposition it · hover to see details · color = role, line color = relationship type.</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/admin.js"></script>
+</body>
+</html>
