@@ -62,7 +62,8 @@ async function signOut() {
 //   player -> dashboard/log/insights   coach -> coach.html   parent -> parent.html
 const PAGE_ROLE = {
   "dashboard.html": "player", "log.html": "player", "insights.html": "player",
-  "team.html": "player", "coach.html": "coach", "parent.html": "parent",
+  "friends.html": "player", "team.html": "player",
+  "coach.html": "coach", "parent.html": "parent",
 };
 
 function landingPage(role) {
@@ -106,8 +107,8 @@ async function loadTopbarUser() {
   // Show only the nav links that belong to this role.
   document.getElementById("nav-coach")?.classList.toggle("section-hidden", role !== "coach");
   document.getElementById("nav-parent")?.classList.toggle("section-hidden", role !== "parent");
-  // Player pages (Home/Log/Insights) are only for players.
-  document.querySelectorAll('.nav a[href="dashboard.html"], .nav a[href="log.html"], .nav a[href="insights.html"]')
+  // Player pages (Home/Log/Insights/Friends) are only for players.
+  document.querySelectorAll('.nav a[href="dashboard.html"], .nav a[href="log.html"], .nav a[href="insights.html"], .nav a[href="friends.html"]')
     .forEach(a => a.classList.toggle("section-hidden", role !== "player"));
 
   // The Team tab appears only for a player who's been added to a team.

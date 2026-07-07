@@ -301,6 +301,12 @@ input[type=range]::-moz-range-thumb {
 .row-x:hover { border-color: var(--red); color: var(--red); }
 @media (max-width: 420px) { .player-row .player-meta { display: none; } }
 
+/* ---------- Friends: head-to-head streak line ---------- */
+.cmp-streak {
+  font-family: var(--display); font-weight: 600; font-size: 15px;
+  color: var(--amber); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+
 /* ---------- Player: linked coach & parent ---------- */
 .conn-row { display: flex; gap: 12px; padding: 8px 0; }
 .conn-row + .conn-row { border-top: 1px solid var(--line); }
