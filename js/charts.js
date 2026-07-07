@@ -23,6 +23,23 @@ function rangeSlice(logs, days) {
   return logs.filter(l => new Date(l.log_date + "T00:00:00") >= since);
 }
 
+// Sleep now lives in its own once-a-day `sleep_entries` table, not on each log.
+// Merge each day's sleep entry onto matching logs (by user_id + date) so every
+// downstream consumer that reads l.sleep_hours / l.sleep_quality keeps working.
+// Legacy sleep already on old logs rows is left untouched when no entry exists.
+function attachSleep(logs, sleepEntries) {
+  const byKey = {};
+  for (const s of (sleepEntries || [])) byKey[s.user_id + "|" + s.entry_date] = s;
+  for (const l of (logs || [])) {
+    const s = byKey[l.user_id + "|" + l.log_date];
+    if (s) {
+      if (s.sleep_hours   != null) l.sleep_hours   = s.sleep_hours;
+      if (s.sleep_quality != null) l.sleep_quality = s.sleep_quality;
+    }
+  }
+  return logs;
+}
+
 // Average a metric across logs, ignoring null entries (rest days etc.).
 function avgOf(logs, key) {
   const v = logs.map(l => l[key]).filter(x => x != null);

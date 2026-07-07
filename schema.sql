@@ -326,3 +326,53 @@ $$;
 
 grant execute on function public.get_my_adults() to authenticated;
 grant execute on function public.get_roster_counterparts(text) to authenticated;
+
+-- ----------------------------------------------------------------
+-- SLEEP ENTRIES
+-- Sleep is a property of the night, not of each training session, so it
+-- lives in its own table with ONE row per user per calendar day (unlike
+-- logs, which has no once-a-day constraint). The unique (user_id,
+-- entry_date) both enforces once-a-day and serves as the upsert conflict
+-- target. Legacy sleep still sits on old logs rows; nothing is backfilled.
+-- Safe to re-run.
+-- ----------------------------------------------------------------
+create table if not exists public.sleep_entries (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  entry_date    date not null default current_date,
+  sleep_hours   numeric(4,1),
+  sleep_quality integer,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  unique (user_id, entry_date)
+);
+
+create index if not exists sleep_entries_user_date_idx
+  on public.sleep_entries (user_id, entry_date desc);
+
+alter table public.sleep_entries enable row level security;
+
+-- Each user reads/writes only their own sleep rows.
+drop policy if exists "own sleep - select" on public.sleep_entries;
+create policy "own sleep - select" on public.sleep_entries
+  for select using (auth.uid() = user_id);
+drop policy if exists "own sleep - insert" on public.sleep_entries;
+create policy "own sleep - insert" on public.sleep_entries
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "own sleep - update" on public.sleep_entries;
+create policy "own sleep - update" on public.sleep_entries
+  for update using (auth.uid() = user_id);
+drop policy if exists "own sleep - delete" on public.sleep_entries;
+create policy "own sleep - delete" on public.sleep_entries
+  for delete using (auth.uid() = user_id);
+
+-- A coach/parent may read the sleep of players they're linked to (extra
+-- permissive SELECT, combined with "own sleep" via OR — mirrors logs).
+drop policy if exists "coach reads player sleep" on public.sleep_entries;
+create policy "coach reads player sleep" on public.sleep_entries
+  for select using (
+    exists (
+      select 1 from public.coach_players cp
+      where cp.coach_id = auth.uid() and cp.player_id = sleep_entries.user_id
+    )
+  );
