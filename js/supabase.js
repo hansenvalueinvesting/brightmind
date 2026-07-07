@@ -56,6 +56,23 @@ async function signOut() {
   window.location.href = "index.html";
 }
 
+// ---- Streak decay (display-side) ------------------------------------------
+// profiles.streak_count is only recomputed when a player submits a log
+// (see updateStreak in js/log.js). Between logs the stored value goes stale,
+// so a broken streak would otherwise keep showing its old number wherever it's
+// displayed (dashboard, team, friends, roster, admin). effectiveStreak()
+// returns the *live* streak for display: the stored count while the streak is
+// still alive (last log was today or yesterday), otherwise 0 (broken). Uses
+// the same local-day + Math.round convention as log.js so there's no drift.
+function effectiveStreak(streakCount, lastLogDate) {
+  const n = streakCount ?? 0;
+  if (n <= 0 || !lastLogDate) return 0;
+  const today = new Date(new Date().toLocaleDateString("en-CA") + "T00:00:00");
+  const last  = new Date(lastLogDate + "T00:00:00");
+  const diff  = Math.round((today - last) / 86400000);
+  return (diff === 0 || diff === 1) ? n : 0;
+}
+
 // ---- Role-based routing ---------------------------------------------------
 // Each role gets its own interface. These helpers decide where a given role
 // belongs and are shared by the login flow and the per-page guard.

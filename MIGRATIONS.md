@@ -11,6 +11,47 @@ Everything below is safe to re-run (`create or replace` / `grant`).
 
 ---
 
+## 2026-07 — Streak decay on the Team roster
+
+Covers: the streak-decay fix. The stored `streak_count` only changes when a
+player logs, so between logs a broken streak keeps showing its old number. The
+client now decays a stale streak to 0 for display (last log not today/yesterday
+→ 0). Every other streak surface already had `last_log_date` from its RPC; the
+Team roster's `get_my_teams()` did not, so it gains a `member_last_log` column.
+
+Because the return signature changes, the function must be dropped first (a
+plain `create or replace` can't change a `returns table` shape). Run once:
+
+```sql
+drop function if exists public.get_my_teams();
+create or replace function public.get_my_teams()
+returns table (team_id uuid, team_name text, member_id uuid, member_name text,
+               member_streak int, member_last_log date)
+language sql security definer set search_path = public, auth
+as $$
+  select t.id,
+         t.name,
+         u.id,
+         coalesce(u.raw_user_meta_data->>'username', u.email),
+         coalesce(p.streak_count, 0),
+         p.last_log_date
+  from public.team_members me
+  join public.teams t        on t.id = me.team_id
+  join public.team_members tm on tm.team_id = t.id
+  join auth.users u          on u.id = tm.player_id
+  left join public.profiles p on p.id = tm.player_id
+  where me.player_id = auth.uid()
+  order by t.name, lower(coalesce(u.raw_user_meta_data->>'username', u.email));
+$$;
+
+grant execute on function public.get_my_teams() to authenticated;
+```
+
+Until this is applied, the Team tab still works but every teammate's streak
+shows 0 (the client reads a `member_last_log` the old function doesn't return).
+
+---
+
 ## 2026-07 — Player friend system
 
 Covers: peer-to-peer friends. Players send/accept/decline friend requests, add

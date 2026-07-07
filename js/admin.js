@@ -170,7 +170,7 @@ function accountInfo(u) {
     ["Joined", fmtDate(u.created_at)],
     ["Last sign-in", fmtDateTime(u.last_sign_in_at)],
     ["Consent", u.consent_at ? fmtDate(u.consent_at) : "Not recorded"],
-    ["Streak", `🔥 ${u.streak_count ?? 0}`],
+    ["Streak", `🔥 ${effectiveStreak(u.streak_count, u.last_log_date)}`],
     ["Last log", u.last_log_date ? fmtDate(u.last_log_date) : "Never"],
   ];
   return `<dl class="acct">${rows.map(([k, v]) =>

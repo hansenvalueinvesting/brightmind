@@ -36,8 +36,11 @@ const todayStr = () => new Date().toLocaleDateString("en-CA");
 
 async function loadProfile() {
   const { data } = await db.from("profiles")
-    .select("streak_count, role").eq("id", session.user.id).single();
-  document.getElementById("streak").textContent = data?.streak_count ?? 0;
+    .select("streak_count, last_log_date, role").eq("id", session.user.id).single();
+  // Show the live streak: it decays to 0 once a day is missed, not the stale
+  // stored count (which only updates on the next log).
+  document.getElementById("streak").textContent =
+    effectiveStreak(data?.streak_count, data?.last_log_date);
 
   // Name + account type, shown under the "Home" heading.
   const name = session.user.user_metadata?.username || session.user.email;

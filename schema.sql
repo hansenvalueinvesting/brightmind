@@ -274,15 +274,20 @@ create policy "coach manages own team members" on public.team_members
   );
 
 -- Roster (names + streak) of every team the caller belongs to.
+-- member_last_log lets the client decay a stale streak to 0 for display.
+-- Return signature changed (added member_last_log), so drop before re-create.
+drop function if exists public.get_my_teams();
 create or replace function public.get_my_teams()
-returns table (team_id uuid, team_name text, member_id uuid, member_name text, member_streak int)
+returns table (team_id uuid, team_name text, member_id uuid, member_name text,
+               member_streak int, member_last_log date)
 language sql security definer set search_path = public, auth
 as $$
   select t.id,
          t.name,
          u.id,
          coalesce(u.raw_user_meta_data->>'username', u.email),
-         coalesce(p.streak_count, 0)
+         coalesce(p.streak_count, 0),
+         p.last_log_date
   from public.team_members me
   join public.teams t        on t.id = me.team_id
   join public.team_members tm on tm.team_id = t.id

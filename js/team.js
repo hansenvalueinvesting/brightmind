@@ -41,7 +41,7 @@ function render(rows, error) {
       ${t.members.map(m => `
         <div class="log-row">
           <span class="log-type">${esc(m.member_name)}</span>
-          <span class="badge">🔥 ${m.member_streak ?? 0}</span>
+          <span class="badge">🔥 ${effectiveStreak(m.member_streak, m.member_last_log)}</span>
         </div>`).join("")}
     </div>`).join("");
 }
