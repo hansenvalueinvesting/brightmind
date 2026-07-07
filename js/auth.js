@@ -43,6 +43,11 @@ async function submitAuth() {
     // Hard gate: no account without consent.
     if (!consent) {
       setMsg("You must accept the consent statement to create an account.", "error");
+      const box = document.getElementById("consentBox");
+      box.classList.remove("invalid");
+      // Force reflow so the shake animation re-triggers on repeat attempts.
+      void box.offsetWidth;
+      box.classList.add("invalid");
       btn.disabled = false;
       return;
     }
@@ -69,6 +74,11 @@ async function submitAuth() {
     window.location.href = landingPage(await roleOf(data.user.id));
   }
 }
+
+// Clear the consent error highlight once the box is ticked.
+document.getElementById("consent").addEventListener("change", (e) => {
+  if (e.target.checked) document.getElementById("consentBox").classList.remove("invalid");
+});
 
 // Submit on Enter.
 document.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
