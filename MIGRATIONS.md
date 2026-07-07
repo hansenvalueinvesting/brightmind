@@ -288,3 +288,114 @@ Until this is applied, the dashboard sleep card can't save (Supabase returns a
 missing-relation error) and sleep-based charts show only legacy per-log values.
 The old `logs.sleep_hours` / `logs.sleep_quality` columns are intentionally left
 in place — nothing needs to be dropped.
+
+---
+
+## 2026-07 — Admin dashboard
+
+Covers: the password-gated `/admin` dashboard (all users by role, per-player
+stats, and the relationship network map). Adds two `security definer` RPCs that
+read across every user, each gated by the shared admin password passed as an
+argument and validated server-side, and granted to `anon` (the admin visitor is
+usually not logged in).
+
+Heads-up on secrecy: a static site can't hide a password. The literal lives in
+the client (`js/admin.js`) so it can be sent to these functions, and anyone who
+views source can read it. Treat `/admin` as a light gate for a trusted operator,
+not hard security. To rotate the password, change the literal in BOTH the two
+functions below (re-run in the SQL Editor) and in `js/admin.js`.
+
+Run this whole block once (safe to re-run — `create or replace` / `grant`):
+
+```sql
+create or replace function public.admin_overview(p_pass text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  result jsonb;
+begin
+  if p_pass is distinct from 'BingBoingChing' then
+    raise exception 'Unauthorized';
+  end if;
+
+  select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb) into result from (
+    select
+      u.id,
+      u.email::text                              as email,
+      (u.raw_user_meta_data->>'username')        as username,
+      coalesce(pr.role, 'player')                as role,
+      u.created_at,
+      u.last_sign_in_at,
+      pr.consent_at,
+      coalesce(pr.streak_count, 0)               as streak_count,
+      pr.last_log_date,
+      (select count(*) from public.logs l where l.user_id = u.id)                                            as log_count,
+      (select count(*) from public.logs l where l.user_id = u.id and l.is_match_day)                         as match_count,
+      (select coalesce(sum(l.duration_minutes), 0) from public.logs l where l.user_id = u.id)                as total_minutes,
+      (select max(l.log_date) from public.logs l where l.user_id = u.id)                                     as last_log,
+      (select round(avg(l.confidence)::numeric, 1) from public.logs l where l.user_id = u.id and l.confidence is not null) as avg_confidence,
+      (select round(avg(l.focus)::numeric, 1)      from public.logs l where l.user_id = u.id and l.focus is not null)      as avg_focus,
+      (select round(avg(l.stress)::numeric, 1)     from public.logs l where l.user_id = u.id and l.stress is not null)     as avg_stress,
+      (select round(avg(l.intensity)::numeric, 1)  from public.logs l where l.user_id = u.id and l.intensity is not null)  as avg_intensity,
+      (select round(avg(s.sleep_hours)::numeric, 1)   from public.sleep_entries s where s.user_id = u.id and s.sleep_hours is not null)   as avg_sleep_hours,
+      (select round(avg(s.sleep_quality)::numeric, 1) from public.sleep_entries s where s.user_id = u.id and s.sleep_quality is not null) as avg_sleep_quality
+    from auth.users u
+    left join public.profiles pr on pr.id = u.id
+    order by coalesce(pr.role, 'player'),
+             lower(coalesce(u.raw_user_meta_data->>'username', u.email))
+  ) t;
+
+  return result;
+end;
+$$;
+
+create or replace function public.admin_relationships(p_pass text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  nodes jsonb;
+  edges jsonb;
+begin
+  if p_pass is distinct from 'BingBoingChing' then
+    raise exception 'Unauthorized';
+  end if;
+
+  select coalesce(jsonb_agg(row_to_json(n)), '[]'::jsonb) into nodes from (
+    select u.id,
+           coalesce(u.raw_user_meta_data->>'username', u.email) as name,
+           u.email::text                                        as email,
+           coalesce(pr.role, 'player')                          as role
+    from auth.users u
+    left join public.profiles pr on pr.id = u.id
+  ) n;
+
+  select coalesce(jsonb_agg(row_to_json(e)), '[]'::jsonb) into edges from (
+    select cp.coach_id as source,
+           cp.player_id as target,
+           coalesce(pr.role, 'coach') as type
+    from public.coach_players cp
+    left join public.profiles pr on pr.id = cp.coach_id
+    union all
+    select f.requester_id as source,
+           f.addressee_id  as target,
+           'friend'        as type
+    from public.friendships f
+    where f.status = 'accepted'
+  ) e;
+
+  return jsonb_build_object('nodes', nodes, 'edges', edges);
+end;
+$$;
+
+grant execute on function public.admin_overview(text)      to anon, authenticated;
+grant execute on function public.admin_relationships(text) to anon, authenticated;
+```
+
+Until this is applied, `/admin` loads but unlocking fails with a
+missing-function error (Supabase returns `404 / PGRST202`).

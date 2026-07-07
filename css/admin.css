@@ -1,0 +1,131 @@
+/* ============================================================
+   Admin dashboard — styles layered on top of style.css.
+   Only loaded by admin/index.html.
+   ============================================================ */
+
+/* .section-hidden must beat the display rules below (admin.css loads after
+   style.css, so at equal specificity these would otherwise win and keep the
+   gate/panels visible). !important here is scoped to the admin page only. */
+.section-hidden { display: none !important; }
+
+/* ---------- Password gate ---------- */
+.gate-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.gate-card { width: 100%; max-width: 380px; }
+.gate-lock { font-size: 34px; text-align: center; margin-bottom: 10px; }
+
+/* ---------- Admin top bar ---------- */
+.admin-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 20px; max-width: 1080px; margin: 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+.admin-bar .tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-left: 8px;
+  background: var(--panel-2); color: var(--amber); border: 1px solid var(--amber-dim);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.admin-wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* ---------- Tab bar ---------- */
+.admin-tabs { display: flex; gap: 8px; margin: 24px 0 20px; flex-wrap: wrap; }
+.admin-tab {
+  background: var(--panel); border: 1px solid var(--line); color: var(--ink-dim);
+  font-family: var(--display); font-weight: 600; font-size: 14px;
+  padding: 9px 18px; border-radius: 8px; cursor: pointer;
+}
+.admin-tab:hover { color: var(--amber); }
+.admin-tab.active { background: var(--amber); color: #1a1200; border-color: var(--amber); }
+
+/* ---------- Users: role groups + accordion ---------- */
+.role-group + .role-group { margin-top: 18px; }
+.role-group-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.role-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.role-group-title {
+  font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink);
+}
+.role-count { color: var(--ink-dim); font-size: 13px; }
+
+.acc {
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  background: var(--panel-2);
+}
+.acc + .acc { margin-top: 8px; }
+.acc-head {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer;
+}
+.acc-head:hover { background: var(--panel); }
+.acc.open .acc-head { border-bottom: 1px solid var(--line); }
+.acc-name { color: var(--ink); font-weight: 500; }
+.acc-email {
+  color: var(--ink-dim); font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.acc-id { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.acc-pill {
+  font-size: 11px; padding: 2px 9px; border-radius: 20px; white-space: nowrap;
+  text-transform: capitalize; border: 1px solid transparent;
+}
+.acc-chevron { color: var(--ink-dim); font-size: 12px; transition: transform .15s; flex-shrink: 0; }
+.acc.open .acc-chevron { transform: rotate(90deg); }
+.acc-body { padding: 16px 14px; display: none; }
+.acc.open .acc-body { display: block; }
+
+/* Account info definition grid */
+.acct {
+  display: grid; grid-template-columns: 150px 1fr; gap: 6px 14px; font-size: 13px;
+}
+.acct dt { color: var(--ink-dim); }
+.acct dd { color: var(--ink); word-break: break-word; }
+@media (max-width: 520px) { .acct { grid-template-columns: 120px 1fr; } }
+
+/* Player stat tiles */
+.stat-head {
+  font-family: var(--display); font-weight: 600; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--amber);
+  margin: 18px 0 10px;
+}
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;
+}
+.stat-tile {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px;
+}
+.stat-num { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--amber); line-height: 1.1; }
+.stat-label { color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+/* Search box */
+.admin-search { margin-bottom: 18px; }
+.admin-search input { max-width: 360px; }
+
+/* ---------- Network map ---------- */
+.net-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.net-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.legend-item { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-dim); }
+.legend-swatch { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.legend-line { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+.net-box {
+  position: relative; height: 620px; background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  touch-action: none;
+}
+.net-box canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.net-box canvas:active { cursor: grabbing; }
+@media (max-width: 680px) { .net-box { height: 480px; } }
+
+.net-tooltip {
+  position: absolute; pointer-events: none; z-index: 5;
+  background: var(--panel); border: 1px solid var(--amber); border-radius: 8px;
+  padding: 8px 11px; font-size: 12px; max-width: 240px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.5); opacity: 0; transition: opacity .1s;
+}
+.net-tooltip .tt-name { color: var(--ink); font-weight: 600; }
+.net-tooltip .tt-sub { color: var(--ink-dim); font-size: 11px; margin-top: 2px; word-break: break-word; }
+.net-hint { color: var(--ink-dim); font-size: 12px; margin-top: 10px; }
