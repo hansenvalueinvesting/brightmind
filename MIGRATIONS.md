@@ -76,6 +76,27 @@ error when adding a child, and coach/parent names show as **N/A**.
 
 ---
 
+## 2026-07 — Match panel slimmed to level / score / performance
+
+Covers: the match section of the daily log now captures only **opponent level**
+(a rating, e.g. `5.01`), **final score** (best-of-five games, e.g. `3-1`, `0-3`),
+and **self-rated performance** (unchanged 1–10 slider). Two new columns back the
+first two fields. The old `match_type` / `tournament_name` / `placement` /
+`emotional_state` / `reflection` columns are intentionally left in place so
+existing match-day rows still read back — nothing is dropped.
+
+Run this once:
+
+```sql
+alter table public.logs add column if not exists opponent_level numeric(4,2);
+alter table public.logs add column if not exists final_score    text;
+```
+
+Until this is applied, saving a match-day log fails with a missing-column error
+from Supabase.
+
+---
+
 ## 2026-07 — Sleep as a once-a-day entry
 
 Covers: moving sleep duration & quality off every `logs` row into their own

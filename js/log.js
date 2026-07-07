@@ -69,12 +69,9 @@ function fillForm(l) {
   setSlider("soreness", l.soreness);
 
   if (l.is_match_day) {
-    setField("match_type", l.match_type);
-    setField("tournament_name", l.tournament_name);
-    setField("placement", l.placement);
+    setField("opponent_level", l.opponent_level);
+    setField("final_score", l.final_score);
     setSlider("perf_rating", l.perf_rating);
-    setSlider("emotional_state", l.emotional_state);
-    setField("reflection", l.reflection);
   }
 }
 
@@ -151,12 +148,9 @@ async function saveLog() {
     // Sleep is captured once a day on the dashboard (sleep_entries), not here.
     soreness: sld("soreness"),
     is_match_day: isMatch,
-    match_type:     isMatch ? val("match_type") : null,
-    tournament_name: isMatch ? (val("tournament_name") || null) : null,
-    placement:      isMatch ? (val("placement") || null) : null,
+    opponent_level: isMatch ? num("opponent_level") : null,
+    final_score:    isMatch ? (val("final_score") || null) : null,
     perf_rating:    isMatch ? sld("perf_rating") : null,
-    emotional_state:isMatch ? sld("emotional_state") : null,
-    reflection:     isMatch ? (val("reflection") || null) : null,
   };
 
   // Edit mode: update the existing row in place. The streak reflects logging
