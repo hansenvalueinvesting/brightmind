@@ -174,12 +174,26 @@ input[type=range]::-moz-range-thumb {
 
 /* ---------- Consent gate ---------- */
 .consent {
-  display: flex; gap: 10px; align-items: flex-start; padding: 14px;
-  background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
-  margin-bottom: 16px; cursor: pointer;
+  display: flex; gap: 12px; align-items: flex-start; padding: 16px;
+  background: var(--panel-2); border: 1px solid var(--amber-dim); border-left: 3px solid var(--amber);
+  border-radius: 8px; margin-bottom: 16px; cursor: pointer;
 }
-.consent input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--amber); flex-shrink: 0; }
-.consent span { font-size: 13px; color: var(--ink-dim); line-height: 1.45; }
+.consent input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--amber); flex-shrink: 0; }
+.consent span { font-size: 14px; color: var(--ink); line-height: 1.45; }
+.consent .consent-label { display: block; font-weight: 600; color: var(--amber); margin-bottom: 3px; letter-spacing: 0.02em; }
+
+/* Flash red when the user tries to sign up without accepting. */
+.consent.invalid {
+  border-color: var(--red); border-left-color: var(--red);
+  background: rgba(248, 81, 73, 0.08);
+  animation: consent-shake 0.4s ease;
+}
+.consent.invalid .consent-label { color: var(--red); }
+@keyframes consent-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
 
 /* ---------- Tabs (login/signup) ---------- */
 .tabs { display: flex; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
