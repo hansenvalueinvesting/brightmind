@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Settings — BrightMind</title>
+<title>Box breathing — BrightMind</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -27,61 +27,51 @@
       <a href="dashboard.html">Home</a>
       <a href="log.html">Log</a>
       <a href="insights.html">Insights</a>
-      <a href="training.html">Training</a>
+      <a href="training.html" class="active">Training</a>
       <a href="friends.html" id="nav-friends" class="section-hidden">Friends</a>
       <a href="team.html" id="nav-team" class="section-hidden">Team</a>
       <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
       <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
-      <a href="settings.html" class="active">Settings</a>
+      <a href="settings.html">Settings</a>
       <button onclick="signOut()">Sign out</button>
     </div>
   </div>
 </div>
 
 <div class="app-wrap">
-  <h1 class="page-title">Settings</h1>
+  <a class="detail-back" href="training.html">← Training</a>
+  <h1 class="page-title">Box breathing</h1>
+  <p class="hint" style="margin-bottom:20px;">Follow the marker around the square — four seconds on each side. Inhale up the left, hold across the top, exhale down the right, hold across the bottom, and repeat.</p>
 
-  <!-- USERNAME -->
   <div class="panel">
-    <div class="panel-title">Username</div>
-    <div class="field">
-      <label for="username">Display name</label>
-      <input type="text" id="username" placeholder="e.g. court_warrior" autocomplete="username">
+    <div class="toggle breathe-durations" id="duration-toggle">
+      <button class="toggle-btn active" data-min="1" onclick="setDuration(1)">1 min</button>
+      <button class="toggle-btn" data-min="3" onclick="setDuration(3)">3 min</button>
+      <button class="toggle-btn" data-min="5" onclick="setDuration(5)">5 min</button>
     </div>
-    <button class="btn" onclick="saveUsername()">Save username</button>
-    <div class="msg" id="username-msg"></div>
-  </div>
 
-  <!-- EMAIL -->
-  <div class="panel">
-    <div class="panel-title">Email</div>
-    <div class="field">
-      <label for="email">Email address</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+    <div class="breathe-stage">
+      <div class="breathe-square" id="breathe-square" data-phase="ready">
+        <div class="breathe-marker" id="breathe-marker"></div>
+        <div class="breathe-center">
+          <div class="breathe-phase" id="breathe-phase">Ready</div>
+          <div class="breathe-count" id="breathe-count"></div>
+        </div>
+      </div>
     </div>
-    <button class="btn" onclick="updateEmail()">Update email</button>
-    <div class="msg" id="email-msg"></div>
-  </div>
 
-  <!-- PASSWORD -->
-  <div class="panel">
-    <div class="panel-title">Password</div>
-    <div class="field">
-      <label for="password">New password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="new-password">
+    <div class="breathe-remaining" id="breathe-remaining"></div>
+
+    <div class="breathe-controls">
+      <button class="btn" id="start-btn" onclick="toggleRun()">Start</button>
+      <button class="btn btn-ghost" id="reset-btn" onclick="resetSession()">Reset</button>
     </div>
-    <div class="field">
-      <label for="password2">Confirm new password</label>
-      <input type="password" id="password2" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <button class="btn" onclick="updatePassword()">Update password</button>
-    <div class="msg" id="password-msg"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
-<script src="js/settings.js"></script>
+<script src="js/box-breathing.js"></script>
 </body>
 </html>
