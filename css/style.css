@@ -470,10 +470,11 @@ input[type=range]::-moz-range-thumb {
 .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 640px; margin: 0 auto; }
 .team-member {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 26px 22px; text-align: center;
+  padding: 30px 24px; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
 }
 .member-avatar {
-  width: 68px; height: 68px; margin: 0 auto 14px; border-radius: 50%;
+  width: 68px; height: 68px; margin: 0 0 16px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--display); font-weight: 700; font-size: 24px; color: #1a1200;
   background: linear-gradient(135deg, var(--amber), var(--amber-dim));
@@ -481,10 +482,10 @@ input[type=range]::-moz-range-thumb {
 .member-name { font-family: var(--display); font-weight: 600; font-size: 18px; }
 .member-role {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--amber);
-  margin-top: 3px;
+  margin-top: 8px; line-height: 1.6; max-width: 200px;
 }
 .member-bio { color: var(--ink-dim); font-size: 14px; line-height: 1.55; margin: 12px 0 14px; }
-.member-link { font-size: 14px; }
+.member-link { font-size: 14px; margin-top: 14px; }
 
 /* ---------- Closing CTA ---------- */
 .landing-cta { text-align: center; padding: 56px 0 64px; border-top: 1px solid var(--line); }
