@@ -12,16 +12,18 @@
 // via loadTopbarUser() (js/supabase.js) on DOMContentLoaded.
 (async () => { await requireSession(); })();
 
-const TOTAL = 180; // 3 minutes
+const TOTAL = 90; // 90 seconds — short and tightly paced
 
 // Scripted cues, sorted by start second. render() shows the last cue whose
-// `at` has been reached.
+// `at` has been reached. Kept close together (~12-16s apart) so the guidance
+// stays continuous and there are no long, awkward silences.
 const STAGES = [
-  { at: 0,   title: "Settle in",                 detail: "Close your eyes. Take a slow breath and let your shoulders drop." },
-  { at: 20,  title: "Picture your winning point", detail: "Feel the racket connect with the ball — a clean, perfect strike — and watch the exact shot land right where you aimed." },
-  { at: 75,  title: "Hear the crowd",            detail: "The cheers rise around you. Clapping, voices calling your name — let the sound fill the court." },
-  { at: 125, title: "Celebrate it",              detail: "The fist pump. The rush of emotion. Your cry of victory as the point is yours." },
-  { at: 170, title: "Hold the feeling",          detail: "Lock in this feeling of winning. Breathe it in, and carry it with you." },
+  { at: 0,  title: "Settle in",          detail: "Close your eyes and take one slow breath." },
+  { at: 10, title: "On the court",       detail: "You're on court, ready — calm and sharp." },
+  { at: 24, title: "The winning shot",   detail: "Feel the racket connect — a clean, perfect strike. The ball lands exactly where you aimed." },
+  { at: 42, title: "Hear the crowd",     detail: "Cheers erupt around you. Clapping, voices calling your name." },
+  { at: 58, title: "Celebrate",          detail: "The fist pump. The rush of emotion. Your cry of victory." },
+  { at: 74, title: "Lock it in",         detail: "Breathe that winning feeling in — it's yours to keep." },
 ];
 
 // Skip the pulsing animation for users who prefer reduced motion.
