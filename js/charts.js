@@ -106,10 +106,11 @@ function barChart(canvasId, labels, datasets, opts = {}) {
 }
 
 // Sleep-hours (x) vs performance (y) scatter. Uses match-day perf rating when
-// present, else mood-after. Returns null when there aren't enough points.
+// present, else the composite daily performance score (see performance.js).
+// Returns null when there aren't enough points.
 function sleepPerfScatter(canvasId, logs) {
   const points = (logs || [])
-    .map(l => ({ x: l.sleep_hours, y: l.is_match_day && l.perf_rating != null ? l.perf_rating : l.mood_after }))
+    .map(l => ({ x: l.sleep_hours, y: l.is_match_day && l.perf_rating != null ? l.perf_rating : computePerformance(l) }))
     .filter(p => p.x != null && p.y != null);
   if (points.length < 3) return null;
   return new Chart(document.getElementById(canvasId), {

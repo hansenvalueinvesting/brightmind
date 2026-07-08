@@ -1,7 +1,8 @@
 // ============================================================
-// Screen 4 — insights: sleep hours (X) vs self-rated performance (Y).
-// Uses match-day perf_rating where available, else mood_after as the
-// general performance proxy so the chart is useful before any matches.
+// Screen 4 — insights: sleep hours (X) vs performance (Y).
+// Uses match-day perf_rating where available, else a composite daily
+// performance score blended from that day's wellness/execution metrics
+// (see performance.js) so the chart is meaningful before any matches.
 // Computes Pearson r for the one-line insight.
 // ============================================================
 
@@ -17,22 +18,32 @@ async function load() {
   // match by date. Fall back to any legacy sleep_hours still on old log rows.
   const [{ data }, { data: sleep }] = await Promise.all([
     db.from("logs")
-      .select("log_date, sleep_hours, perf_rating, mood_after, is_match_day")
+      .select("log_date, sleep_hours, sleep_quality, perf_rating, mood_after, confidence, focus, stress, soreness, screen_time_hours, is_match_day")
       .eq("user_id", session.user.id),
     db.from("sleep_entries")
-      .select("entry_date, sleep_hours")
+      .select("entry_date, sleep_hours, sleep_quality")
       .eq("user_id", session.user.id),
   ]);
 
+  // Merge each day's sleep entry onto its log so the performance score
+  // (and the X axis) see sleep hours + quality. Legacy sleep already on
+  // old log rows is kept when there's no entry for that date.
   const sleepByDate = {};
-  for (const s of (sleep || [])) sleepByDate[s.entry_date] = s.sleep_hours;
+  for (const s of (sleep || [])) sleepByDate[s.entry_date] = s;
 
-  // Build points: need sleep + a performance value.
+  // Build points: need sleep hours (X) + a performance value (Y).
   const points = (data || [])
-    .map(l => ({
-      x: sleepByDate[l.log_date] != null ? sleepByDate[l.log_date] : l.sleep_hours,
-      y: l.is_match_day && l.perf_rating != null ? l.perf_rating : l.mood_after
-    }))
+    .map(l => {
+      const s = sleepByDate[l.log_date];
+      if (s) {
+        if (s.sleep_hours   != null) l.sleep_hours   = s.sleep_hours;
+        if (s.sleep_quality != null) l.sleep_quality = s.sleep_quality;
+      }
+      return {
+        x: l.sleep_hours,
+        y: l.is_match_day && l.perf_rating != null ? l.perf_rating : computePerformance(l)
+      };
+    })
     .filter(p => p.x != null && p.y != null);
 
   const headline = document.getElementById("headline");
@@ -63,7 +74,7 @@ async function load() {
       scales: {
         x: { title: { display: true, text: "Sleep hours", color: "#8b96a5" },
              grid: { color: "#2a323d" }, ticks: { color: "#8b96a5" } },
-        y: { min: 0, max: 10, title: { display: true, text: "Performance (self-rated)", color: "#8b96a5" },
+        y: { min: 0, max: 10, title: { display: true, text: "Performance", color: "#8b96a5" },
              grid: { color: "#2a323d" }, ticks: { color: "#8b96a5" } }
       }
     }
@@ -82,6 +93,19 @@ function pearson(xs, ys) {
   }
   return (dx && dy) ? num / Math.sqrt(dx * dy) : 0;
 }
+
+// Show/hide the "About this insight" popup.
+function toggleInfo(show) {
+  const m = document.getElementById("info-modal");
+  if (!m) return;
+  m.classList.toggle("section-hidden", !show);
+  document.body.style.overflow = show ? "hidden" : "";
+}
+
+document.addEventListener("keydown", e => {
+  const m = document.getElementById("info-modal");
+  if (e.key === "Escape" && m && !m.classList.contains("section-hidden")) toggleInfo(false);
+});
 
 function interpret(r) {
   const mag = Math.abs(r);
