@@ -640,17 +640,17 @@ input[type=range]::-moz-range-thumb {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; padding: 26px 0 8px;
 }
-/* The BrightMind logo mark, shown as a circular emblem that gently "breathes"
-   (scales) only while .playing, so it stops when paused. */
+/* A simple amber orb that gently "breathes" (scales) only while .playing,
+   so it stops when paused. */
 .viz-orb {
-  width: min(150px, 44vw); height: min(150px, 44vw);
-  object-fit: cover; border-radius: 50%; display: block;
+  width: min(150px, 44vw); height: min(150px, 44vw); border-radius: 50%;
+  background: radial-gradient(circle at 42% 38%, #ffd24d 0%, #ffb000 55%, #d99400 100%);
+  box-shadow: 0 0 44px rgba(255, 176, 0, 0.4);
   margin-bottom: 26px;
-  filter: drop-shadow(0 0 22px rgba(255, 176, 0, 0.3));
 }
 .viz-orb.playing { animation: viz-pulse 5s ease-in-out infinite; }
 @keyframes viz-pulse {
-  0%, 100% { transform: scale(0.94); }
+  0%, 100% { transform: scale(0.92); }
   50%      { transform: scale(1.06); }
 }
 .viz-cue { max-width: 460px; }
