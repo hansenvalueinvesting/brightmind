@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Redirecting… — BrightMind</title>
+<link rel="canonical" href="pages/log.html">
+<meta name="robots" content="noindex">
+<script>
+// This page moved into pages/ during the file reorganization. Old URLs —
+// installed-app start_url, bookmarks, open tabs, and password-reset email
+// links — still land here, so forward them to the new location. location.search
+// and location.hash are carried over so deep links keep working: the Supabase
+// recovery token rides in the hash on reset, ?edit= on log, etc.
+location.replace("pages/log.html" + location.search + location.hash);
+</script>
+<meta http-equiv="refresh" content="0; url=pages/log.html">
+</head>
+<body>
+<p>BrightMind has moved. <a href="pages/log.html">Continue →</a></p>
+</body>
+</html>
