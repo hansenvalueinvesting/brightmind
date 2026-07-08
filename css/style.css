@@ -577,3 +577,53 @@ input[type=range]::-moz-range-thumb {
    not just on hover. */
 .site-credit a { color: var(--amber); text-decoration: underline; }
 .site-credit a:hover { text-decoration: none; }
+
+/* ---------- Training index ---------- */
+.training-subhead {
+  font-family: var(--display); font-weight: 600; font-size: 14px;
+  color: var(--ink); margin: 4px 0 14px;
+}
+.activity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+/* Activity cards reuse .feature-card but are links, so reset the anchor colour
+   and add the interactive amber border on hover. */
+.activity-card { display: block; color: inherit; }
+.activity-card:hover { text-decoration: none; border-color: var(--amber); transform: translateY(-2px); }
+.activity-card h3 { color: var(--ink); }
+.activity-meta {
+  display: inline-block; margin-top: 12px; font-family: var(--mono); font-size: 12px;
+  color: var(--amber); letter-spacing: 0.04em;
+}
+
+/* ---------- Box breathing ---------- */
+.detail-back { display: inline-block; margin: 24px 0 2px; color: var(--ink-dim); font-size: 13px; }
+.detail-back:hover { color: var(--amber); text-decoration: none; }
+.breathe-durations { max-width: 320px; margin: 0 auto 8px; }
+.breathe-durations.is-disabled { opacity: .5; pointer-events: none; }
+.breathe-stage { display: flex; justify-content: center; align-items: center; padding: 30px 0 10px; }
+.breathe-square {
+  position: relative;
+  width: min(300px, 74vw); height: min(300px, 74vw);
+  border: 2px solid var(--line); border-radius: 8px;
+  transition: border-color .4s;
+}
+/* The border glows amber on the "active" phases so inhale/exhale read at a glance. */
+.breathe-square[data-phase="inhale"] { border-color: var(--amber); }
+.breathe-square[data-phase="exhale"] { border-color: var(--amber-dim); }
+.breathe-square[data-phase="done"]   { border-color: var(--green); }
+/* The marker rides the perimeter; JS sets left/top (as %) each frame.
+   translate(-50%,-50%) keeps its centre on the edge. */
+.breathe-marker {
+  position: absolute; left: 0; top: 100%;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--amber); transform: translate(-50%, -50%);
+  box-shadow: 0 0 12px rgba(255, 176, 0, 0.6);
+}
+.breathe-center {
+  position: absolute; inset: 0; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.breathe-phase { font-family: var(--display); font-weight: 700; font-size: 26px; color: var(--ink); }
+.breathe-count { font-family: var(--mono); font-size: 34px; font-weight: 600; color: var(--amber); line-height: 1; min-height: 34px; }
+.breathe-remaining { text-align: center; color: var(--ink-dim); font-size: 13px; margin-top: 8px; }
+.breathe-controls { display: flex; gap: 12px; margin: 22px auto 0; max-width: 360px; }
+.breathe-controls .btn { flex: 1; }

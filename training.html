@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Settings — BrightMind</title>
+<title>Training — BrightMind</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -27,61 +27,43 @@
       <a href="dashboard.html">Home</a>
       <a href="log.html">Log</a>
       <a href="insights.html">Insights</a>
-      <a href="training.html">Training</a>
+      <a href="training.html" class="active">Training</a>
       <a href="friends.html" id="nav-friends" class="section-hidden">Friends</a>
       <a href="team.html" id="nav-team" class="section-hidden">Team</a>
       <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
       <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
-      <a href="settings.html" class="active">Settings</a>
+      <a href="settings.html">Settings</a>
       <button onclick="signOut()">Sign out</button>
     </div>
   </div>
 </div>
 
 <div class="app-wrap">
-  <h1 class="page-title">Settings</h1>
+  <h1 class="page-title">Training</h1>
+  <p class="hint" style="margin-bottom:20px;">Guided courses and activities to build your mental and physical game.</p>
 
-  <!-- USERNAME -->
   <div class="panel">
-    <div class="panel-title">Username</div>
-    <div class="field">
-      <label for="username">Display name</label>
-      <input type="text" id="username" placeholder="e.g. court_warrior" autocomplete="username">
+    <div class="panel-title">Mental training</div>
+    <h3 class="training-subhead">Breathing exercises</h3>
+    <div class="activity-grid">
+      <a class="feature-card activity-card" href="box-breathing.html">
+        <div class="feature-icon">🫁</div>
+        <h3>Box breathing</h3>
+        <p>Inhale, hold, exhale, hold — four seconds each. A steady square rhythm to calm nerves and sharpen focus.</p>
+        <span class="activity-meta">1 · 3 · 5 min</span>
+      </a>
     </div>
-    <button class="btn" onclick="saveUsername()">Save username</button>
-    <div class="msg" id="username-msg"></div>
   </div>
 
-  <!-- EMAIL -->
   <div class="panel">
-    <div class="panel-title">Email</div>
-    <div class="field">
-      <label for="email">Email address</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
-    </div>
-    <button class="btn" onclick="updateEmail()">Update email</button>
-    <div class="msg" id="email-msg"></div>
-  </div>
-
-  <!-- PASSWORD -->
-  <div class="panel">
-    <div class="panel-title">Password</div>
-    <div class="field">
-      <label for="password">New password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <div class="field">
-      <label for="password2">Confirm new password</label>
-      <input type="password" id="password2" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <button class="btn" onclick="updatePassword()">Update password</button>
-    <div class="msg" id="password-msg"></div>
+    <div class="panel-title">Physical training</div>
+    <p class="hint">More activities coming soon.</p>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
-<script src="js/settings.js"></script>
+<script src="js/training.js"></script>
 </body>
 </html>
