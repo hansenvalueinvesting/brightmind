@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Training — BrightMind</title>
+<title>Winning point visualization — BrightMind</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -39,41 +39,32 @@
 </div>
 
 <div class="app-wrap">
-  <h1 class="page-title">Training</h1>
-  <p class="hint" style="margin-bottom:20px;">Guided courses and activities to build your mental and physical game.</p>
+  <a class="detail-back" href="training.html">← Training</a>
+  <h1 class="page-title">Winning point visualization</h1>
+  <p class="hint" style="margin-bottom:20px;">A three-minute guided visualization. Find a quiet moment, get comfortable, press start, and let the cues carry you through your winning point.</p>
 
   <div class="panel">
-    <div class="panel-title">Mental training</div>
-    <h3 class="training-subhead">Breathing exercises</h3>
-    <div class="activity-grid">
-      <a class="feature-card activity-card" href="box-breathing.html">
-        <div class="feature-icon">🫁</div>
-        <h3>Box breathing</h3>
-        <p>Inhale, hold, exhale, hold — four seconds each. A steady square rhythm to calm nerves and sharpen focus.</p>
-        <span class="activity-meta">1 · 3 · 5 min</span>
-      </a>
+    <div class="viz-stage">
+      <div class="viz-orb" id="viz-orb"></div>
+      <div class="viz-cue">
+        <div class="viz-title" id="viz-title">Ready</div>
+        <div class="viz-detail" id="viz-detail">Press start, close your eyes, and follow along.</div>
+      </div>
     </div>
 
-    <h3 class="training-subhead">Mindset exercises</h3>
-    <div class="activity-grid">
-      <a class="feature-card activity-card" href="winning-point.html">
-        <div class="feature-icon">🏆</div>
-        <h3>Winning point visualization</h3>
-        <p>Close your eyes and rehearse your winning point — the perfect shot, the roar of the crowd, the rush of celebration.</p>
-        <span class="activity-meta">3 min</span>
-      </a>
-    </div>
-  </div>
+    <div class="viz-progress"><span id="viz-bar"></span></div>
+    <div class="breathe-remaining" id="viz-remaining"></div>
 
-  <div class="panel">
-    <div class="panel-title">Physical training</div>
-    <p class="hint">More activities coming soon.</p>
+    <div class="breathe-controls">
+      <button class="btn" id="start-btn" onclick="toggleRun()">Start</button>
+      <button class="btn btn-ghost" id="reset-btn" onclick="resetSession()">Reset</button>
+    </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
-<script src="js/training.js"></script>
+<script src="js/winning-point.js"></script>
 </body>
 </html>
