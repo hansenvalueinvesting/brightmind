@@ -20,10 +20,15 @@
 <div class="topbar">
   <a class="brand" href="index.html"><img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span></a>
   <div class="nav">
-    <a href="#features">Features</a>
-    <a href="#install">Install</a>
-    <a href="#team">Team</a>
-    <a class="landing-login" id="nav-login" href="login.html">Log in</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-controls="nav-menu" aria-expanded="false" onclick="toggleNav(event)">
+      <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
+    </button>
+    <div class="nav-menu" id="nav-menu">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#team">Team</a>
+      <a class="landing-login" id="nav-login" href="login.html">Log in</a>
+    </div>
   </div>
 </div>
 
@@ -150,6 +155,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
+<script src="js/nav.js"></script>
 <script>
 // If the visitor already has a session, point the calls-to-action straight
 // into the app instead of the login screen. Fails silently if Supabase or the

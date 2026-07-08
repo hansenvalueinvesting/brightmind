@@ -20,15 +20,20 @@
   <a class="brand" href="index.html"><img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span></a>
   <div class="nav">
     <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
-    <a href="dashboard.html">Home</a>
-    <a href="log.html">Log</a>
-    <a href="insights.html">Insights</a>
-    <a href="friends.html" id="nav-friends" class="active">Friends</a>
-    <a href="team.html" id="nav-team" class="section-hidden">Team</a>
-    <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
-    <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
-    <a href="settings.html">Settings</a>
-    <button onclick="signOut()">Sign out</button>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-controls="nav-menu" aria-expanded="false" onclick="toggleNav(event)">
+      <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
+    </button>
+    <div class="nav-menu" id="nav-menu">
+      <a href="dashboard.html">Home</a>
+      <a href="log.html">Log</a>
+      <a href="insights.html">Insights</a>
+      <a href="friends.html" id="nav-friends" class="active">Friends</a>
+      <a href="team.html" id="nav-team" class="section-hidden">Team</a>
+      <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
+      <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
+      <a href="settings.html">Settings</a>
+      <button onclick="signOut()">Sign out</button>
+    </div>
   </div>
 </div>
 
@@ -70,6 +75,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
+<script src="js/nav.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/friends.js"></script>
 </body>
