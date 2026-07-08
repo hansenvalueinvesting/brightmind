@@ -1,5 +1,5 @@
 // ============================================================
-// Winning point visualization — a 3-minute guided mindset exercise.
+// Winning point visualization — a short (~1 minute) guided mindset exercise.
 // A calm cue script advances the player through picturing their winning
 // point, hearing the crowd, and celebrating, while an ambient orb pulses
 // and a progress bar fills.
@@ -12,18 +12,18 @@
 // via loadTopbarUser() (js/supabase.js) on DOMContentLoaded.
 (async () => { await requireSession(); })();
 
-const TOTAL = 90; // 90 seconds — short and tightly paced
+const TOTAL = 60; // 60 seconds — short and tightly paced
 
 // Scripted cues, sorted by start second. render() shows the last cue whose
-// `at` has been reached. Kept close together (~12-16s apart) so the guidance
+// `at` has been reached. Kept close together (~8-14s apart) so the guidance
 // stays continuous and there are no long, awkward silences.
 const STAGES = [
   { at: 0,  title: "Settle in",          detail: "Close your eyes and take one slow breath." },
-  { at: 10, title: "On the court",       detail: "You're on court, ready — calm and sharp." },
-  { at: 24, title: "The winning shot",   detail: "Feel the racket connect — a clean, perfect strike. The ball lands exactly where you aimed." },
-  { at: 42, title: "Hear the crowd",     detail: "Cheers erupt around you. Clapping, voices calling your name." },
-  { at: 58, title: "Celebrate",          detail: "The fist pump. The rush of emotion. Your cry of victory." },
-  { at: 74, title: "Lock it in",         detail: "Breathe that winning feeling in — it's yours to keep." },
+  { at: 8,  title: "On the court",       detail: "You're on court, ready — calm and sharp." },
+  { at: 18, title: "The winning shot",   detail: "Feel the racket connect — a clean, perfect strike. The ball lands exactly where you aimed." },
+  { at: 32, title: "Hear the crowd",     detail: "Cheers erupt around you. Clapping, voices calling your name." },
+  { at: 44, title: "Celebrate",          detail: "The fist pump. The rush of emotion. Your cry of victory." },
+  { at: 54, title: "Lock it in",         detail: "Breathe that winning feeling in — it's yours to keep." },
 ];
 
 // Skip the pulsing animation for users who prefer reduced motion.
