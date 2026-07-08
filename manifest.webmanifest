@@ -2,7 +2,7 @@
   "name": "BrightMind Athletics",
   "short_name": "BrightMind",
   "description": "Log training, mind, and recovery in under 2 minutes.",
-  "start_url": "login.html",
+  "start_url": "pages/login.html",
   "scope": ".",
   "display": "standalone",
   "orientation": "portrait",

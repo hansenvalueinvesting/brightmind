@@ -7,6 +7,19 @@
 const SUPABASE_URL  = "https://ebyhwddmxoqngvqbgkoo.supabase.co/";       // e.g. https://abcxyz.supabase.co
 const SUPABASE_ANON = "sb_publishable_9eAwOE5IexKgr_KezmmQwg_UPYXr3R1";  // the long "anon public" key
 
+// ---- Site root -------------------------------------------------------------
+// Absolute URL of the folder that holds index.html, js/, css/, assets/ and the
+// pages/ directory. It's derived from this script's own URL (this file always
+// lives at <root>/js/supabase.js), so cross-folder navigation works the same
+// whether the calling page is at the root (index.html), under pages/, or under
+// admin/ — and under any hosting subpath (e.g. GitHub Pages' /brightmind/).
+// Captured at load time while document.currentScript is still valid.
+const SITE_ROOT = new URL(
+  "../",
+  (document.currentScript && document.currentScript.src) ||
+    new URL("js/supabase.js", location.href).href
+).href;
+
 // Site credit — appears in the footer of every page (this file loads everywhere).
 // Registered up top so it renders even if Supabase/the CDN below fails to load.
 function renderSiteCredit() {
@@ -44,16 +57,16 @@ if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) || SUPABASE_ANON.startsWit
 async function requireSession() {
   const { data: { session } } = await db.auth.getSession();
   if (!session) {
-    window.location.href = "login.html";
+    window.location.href = SITE_ROOT + "pages/login.html";
     return null;
   }
   return session;
 }
 
-// Sign out from anywhere. Lands on the public home page (index.html).
+// Sign out from anywhere. Lands on the public home page (index.html at root).
 async function signOut() {
   await db.auth.signOut();
-  window.location.href = "index.html";
+  window.location.href = SITE_ROOT + "index.html";
 }
 
 // ---- Streak decay (display-side) ------------------------------------------
@@ -84,9 +97,10 @@ const PAGE_ROLE = {
 };
 
 function landingPage(role) {
-  if (role === "coach")  return "coach.html";
-  if (role === "parent") return "parent.html";
-  return "dashboard.html";
+  const file = role === "coach"  ? "coach.html"
+             : role === "parent" ? "parent.html"
+             : "dashboard.html";
+  return SITE_ROOT + "pages/" + file;
 }
 
 async function roleOf(userId) {

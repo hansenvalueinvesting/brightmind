@@ -9,7 +9,7 @@
 //
 // All data comes from two security-definer RPCs (admin_overview,
 // admin_relationships) that take the password and validate it
-// server-side, so the data itself is gated — see schema.sql. The
+// server-side, so the data itself is gated — see db/schema.sql. The
 // password below only exists so the client can send it to those RPCs;
 // it is NOT a real secret on a static site.
 // ============================================================
