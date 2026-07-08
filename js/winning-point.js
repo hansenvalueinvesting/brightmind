@@ -38,23 +38,61 @@ const detailEl = document.getElementById("viz-detail");
 const barEl    = document.getElementById("viz-bar");
 const remainEl = document.getElementById("viz-remaining");
 const startBtn = document.getElementById("start-btn");
+const soundBtn = document.getElementById("sound-btn");
+
+// ---- Spoken guidance ------------------------------------------------------
+// The player is told to close their eyes, so each cue is read aloud with the
+// browser's built-in speech synthesis (no dependency). Speaking is triggered
+// by the Start-button gesture, which satisfies browser autoplay rules.
+const synth = window.speechSynthesis || null;
+let voiceOn = true;          // toggled by the sound button
+let lastSpokenIdx = -1;      // stage last spoken, so each cue is read once
+
+function speak(text) {
+  if (!voiceOn || !synth) return;
+  synth.cancel();            // drop any in-flight utterance first
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.9;              // a touch slower for a calm, guided feel
+  u.pitch = 1;
+  synth.speak(u);
+}
+
+function stopSpeaking() { if (synth) synth.cancel(); }
+
+// Sound toggle: mute cancels any speech; unmuting mid-session re-reads the
+// current cue so the player isn't left without guidance.
+function toggleVoice() {
+  voiceOn = !voiceOn;
+  soundBtn.textContent = voiceOn ? "🔊 Voice on" : "🔇 Voice off";
+  soundBtn.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+  if (!voiceOn) { stopSpeaking(); return; }
+  if (running) speak(cueText(STAGES[currentStageIdx()]));
+}
+
+function cueText(stage) { return stage.title + ". " + stage.detail; }
 
 function fmtTime(s) {
   s = Math.max(0, Math.ceil(s));
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 }
 
-function currentStage() {
-  let stage = STAGES[0];
-  for (const s of STAGES) { if (elapsed >= s.at) stage = s; else break; }
-  return stage;
+// Index of the last stage whose start second has been reached.
+function currentStageIdx() {
+  let idx = 0;
+  for (let i = 0; i < STAGES.length; i++) {
+    if (elapsed >= STAGES[i].at) idx = i; else break;
+  }
+  return idx;
 }
 
-// Draw the current running state from `elapsed`.
+// Draw the current running state from `elapsed`. Speaks a cue the first time
+// its stage becomes active (once per transition).
 function render() {
-  const stage = currentStage();
+  const idx = currentStageIdx();
+  const stage = STAGES[idx];
   titleEl.textContent = stage.title;
   detailEl.textContent = stage.detail;
+  if (running && idx !== lastSpokenIdx) { lastSpokenIdx = idx; speak(cueText(stage)); }
   barEl.style.width = Math.min(100, (elapsed / TOTAL) * 100) + "%";
   remainEl.textContent = fmtTime(TOTAL - elapsed) + " remaining";
 }
@@ -87,6 +125,7 @@ function start() {
   if (elapsed >= TOTAL) elapsed = 0; // restart after a completed session
   running = true;
   lastTs = 0;
+  lastSpokenIdx = -1;   // (re)speak the current cue on start/resume
   startBtn.textContent = "Pause";
   if (!reduceMotion) orb.classList.add("playing");
   render();
@@ -98,6 +137,7 @@ function pause() {
   if (rafId) cancelAnimationFrame(rafId);
   startBtn.textContent = "Resume";
   orb.classList.remove("playing");
+  stopSpeaking();
 }
 
 function finish() {
@@ -109,6 +149,7 @@ function finish() {
   detailEl.textContent = "Carry that winning feeling into your next match.";
   barEl.style.width = "100%";
   remainEl.textContent = "Nice work — session complete.";
+  speak("Complete. Carry that winning feeling into your next match.");
 }
 
 function toggleRun() {
@@ -121,8 +162,13 @@ function resetSession() {
   if (rafId) cancelAnimationFrame(rafId);
   elapsed = 0;
   lastTs = 0;
+  lastSpokenIdx = -1;
   startBtn.textContent = "Start";
+  stopSpeaking();
   renderIdle();
 }
+
+// Stop any narration if the player leaves the page mid-session.
+window.addEventListener("pagehide", stopSpeaking);
 
 renderIdle();
