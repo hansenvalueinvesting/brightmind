@@ -44,13 +44,13 @@ if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) || SUPABASE_ANON.startsWit
 async function requireSession() {
   const { data: { session } } = await db.auth.getSession();
   if (!session) {
-    window.location.href = "index.html";
+    window.location.href = "login.html";
     return null;
   }
   return session;
 }
 
-// Sign out from anywhere.
+// Sign out from anywhere. Lands on the public home page (index.html).
 async function signOut() {
   await db.auth.signOut();
   window.location.href = "index.html";

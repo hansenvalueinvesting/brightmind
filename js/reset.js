@@ -71,5 +71,5 @@ async function submitReset() {
   setMsg("Password updated. Redirecting to login…", "ok");
   // Sign out the recovery session so they log in fresh with the new password.
   await db.auth.signOut();
-  setTimeout(() => { window.location.href = "index.html"; }, 1500);
+  setTimeout(() => { window.location.href = "login.html"; }, 1500);
 }
