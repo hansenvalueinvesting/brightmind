@@ -2,20 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Redirecting… — BrightMind</title>
-<link rel="canonical" href="pages/reset.html">
-<meta name="robots" content="noindex">
-<script>
-// This page moved into pages/ during the file reorganization. Old URLs —
-// installed-app start_url, bookmarks, open tabs, and password-reset email
-// links — still land here, so forward them to the new location. location.search
-// and location.hash are carried over so deep links keep working: the Supabase
-// recovery token rides in the hash on reset, ?edit= on log, etc.
-location.replace("pages/reset.html" + location.search + location.hash);
-</script>
-<meta http-equiv="refresh" content="0; url=pages/reset.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset password · BrightMind Athletics</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e1116">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<p>BrightMind has moved. <a href="pages/reset.html">Continue →</a></p>
+<div class="auth-wrap">
+  <div class="panel" style="width:100%; max-width:400px;">
+    <div class="brand brand-auth" style="margin-bottom:6px; font-size:22px;">
+      <img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span>
+    </div>
+    <p class="hint" style="text-align:center; margin-bottom:22px;">Choose a new password.</p>
+
+    <!-- Shown once the recovery link is verified -->
+    <div id="reset-fields" class="section-hidden">
+      <div class="field">
+        <label for="password">New password</label>
+        <input type="password" id="password" autocomplete="new-password" placeholder="••••••••">
+      </div>
+      <div class="field">
+        <label for="password2">Confirm new password</label>
+        <input type="password" id="password2" autocomplete="new-password" placeholder="••••••••">
+      </div>
+      <button class="btn" id="submitBtn" onclick="submitReset()">Update password</button>
+    </div>
+
+    <!-- Shown when the link is missing/expired/invalid -->
+    <div id="reset-invalid" class="section-hidden">
+      <p class="hint" style="text-align:center;">
+        This reset link is invalid or has expired.
+      </p>
+      <a class="btn btn-ghost" href="login.html" style="text-align:center; text-decoration:none;">Back to login</a>
+    </div>
+
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/reset.js"></script>
 </body>
 </html>
