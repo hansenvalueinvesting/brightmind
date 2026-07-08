@@ -141,6 +141,28 @@ a.brand:hover { opacity: 0.85; }
   border-radius: 50%;
 }
 
+/* Small round "i" button that pins to the right edge of a panel title. */
+.info-btn {
+  margin-left: auto; flex: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: none; border: 1px solid var(--line); color: var(--ink-dim);
+  font-family: var(--display); font-size: 12px; font-weight: 700; font-style: italic;
+  line-height: 1; cursor: pointer; text-transform: none; letter-spacing: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.info-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+/* Explanatory copy inside an info modal. */
+.info-body { font-size: 13.5px; color: var(--ink); line-height: 1.6; margin-top: 10px; }
+.info-body h4 {
+  font-family: var(--display); font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--amber); margin: 18px 0 6px;
+}
+.info-body p { margin: 0 0 10px; color: var(--ink-dim); }
+.info-body ul { margin: 0 0 10px; padding-left: 18px; color: var(--ink-dim); }
+.info-body li { margin-bottom: 4px; }
+.info-body b { color: var(--ink); }
+
 /* ---------- Forms ---------- */
 .field { margin-bottom: 16px; }
 .field:last-child { margin-bottom: 0; }

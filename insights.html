@@ -41,9 +41,38 @@
   <h1 class="page-title">Insights</h1>
 
   <div class="panel">
-    <div class="panel-title">Sleep vs. performance</div>
+    <div class="panel-title">Sleep vs. performance
+      <button class="info-btn" id="infoBtn" onclick="toggleInfo(true)" aria-label="About this insight" title="About this insight">i</button>
+    </div>
     <p class="hint" id="headline" style="margin-bottom:18px;">Loading…</p>
     <div class="chart-box"><canvas id="scatter"></canvas></div>
+  </div>
+</div>
+
+<!-- "About this insight" popup, toggled by the info button. -->
+<div class="modal-overlay section-hidden" id="info-modal" onclick="if(event.target===this)toggleInfo(false)">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="info-title">
+    <button class="modal-close" onclick="toggleInfo(false)" aria-label="Close">✕</button>
+    <div class="modal-head"><div><div class="modal-title" id="info-title">Sleep vs. performance</div></div></div>
+    <div class="info-body">
+      <h4>Why this matters</h4>
+      <p>Sleep is one of the biggest — and most controllable — drivers of athletic performance: reaction time, decision-making, recovery and mood all move with it. This chart plots each day's sleep against how you performed, so you can see whether more sleep actually tracks with better days <b>for you</b>, not just in general. The correlation <b>r</b> in the headline sums up how tightly the two move together (−1 to +1).</p>
+
+      <h4>How performance is scored</h4>
+      <p>On a <b>match day</b>, we use your own self-rated performance (1–10).</p>
+      <p>On <b>every other day</b> there's no single rating, so we blend that day's logged metrics into one 0–10 score. Each metric is converted so higher always means better, then combined as a weighted average:</p>
+      <ul>
+        <li>Mood after — <b>20%</b></li>
+        <li>Confidence — <b>15%</b></li>
+        <li>Focus — <b>15%</b></li>
+        <li>Sleep quality — <b>12%</b></li>
+        <li>Stress (lower is better) — <b>12%</b></li>
+        <li>Sleep hours (best around 8h) — <b>10%</b></li>
+        <li>Body soreness (lower is better) — <b>8%</b></li>
+        <li>Screen time (lower is better) — <b>8%</b></li>
+      </ul>
+      <p>Metrics you didn't log that day are skipped and the rest reweighted, so a lighter log still scores fairly. Training load (intensity and duration) is deliberately left out — a hard, long session shouldn't count as a worse day.</p>
+    </div>
   </div>
 </div>
 
@@ -51,6 +80,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
+<script src="js/performance.js"></script>
 <script src="js/insights.js"></script>
 </body>
 </html>
