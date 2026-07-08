@@ -640,25 +640,17 @@ input[type=range]::-moz-range-thumb {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; padding: 26px 0 8px;
 }
-/* A squash ball: matte black rubber with the single amber speed-dot and a
-   soft top-left highlight for a spherical look. Gently "breathes" (scales)
-   only while .playing, so it stops when paused. */
+/* The BrightMind logo mark, shown as a circular emblem that gently "breathes"
+   (scales) only while .playing, so it stops when paused. */
 .viz-orb {
-  position: relative;
-  width: min(160px, 46vw); height: min(160px, 46vw); border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #4a5058 0%, #23272e 42%, #0c0e11 100%);
-  box-shadow: inset -12px -14px 26px rgba(0,0,0,0.75), 0 12px 30px rgba(0,0,0,0.5);
+  width: min(150px, 44vw); height: min(150px, 44vw);
+  object-fit: cover; border-radius: 50%; display: block;
   margin-bottom: 26px;
-}
-.viz-orb::after {
-  content: ""; position: absolute; top: 27%; left: 55%;
-  width: 20%; height: 20%; border-radius: 50%;
-  background: radial-gradient(circle at 38% 35%, #ffd86b 0%, #ffb000 65%, #c98600 100%);
-  box-shadow: 0 0 10px rgba(255, 176, 0, 0.45);
+  filter: drop-shadow(0 0 22px rgba(255, 176, 0, 0.3));
 }
 .viz-orb.playing { animation: viz-pulse 5s ease-in-out infinite; }
 @keyframes viz-pulse {
-  0%, 100% { transform: scale(0.95); }
+  0%, 100% { transform: scale(0.94); }
   50%      { transform: scale(1.06); }
 }
 .viz-cue { max-width: 460px; }
