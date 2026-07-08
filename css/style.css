@@ -627,3 +627,32 @@ input[type=range]::-moz-range-thumb {
 .breathe-remaining { text-align: center; color: var(--ink-dim); font-size: 13px; margin-top: 8px; }
 .breathe-controls { display: flex; gap: 12px; margin: 22px auto 0; max-width: 360px; }
 .breathe-controls .btn { flex: 1; }
+
+/* ---------- Winning point visualization ---------- */
+.viz-stage {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 26px 0 8px;
+}
+/* Soft amber orb; pulses only while .playing so it stops when paused. */
+.viz-orb {
+  width: min(160px, 46vw); height: min(160px, 46vw); border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, rgba(255,176,0,0.55), rgba(255,176,0,0.10) 62%, transparent 72%);
+  box-shadow: 0 0 40px rgba(255,176,0,0.25);
+  margin-bottom: 26px;
+}
+.viz-orb.playing { animation: viz-pulse 5s ease-in-out infinite; }
+@keyframes viz-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.75; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+.viz-cue { max-width: 460px; }
+.viz-title { font-family: var(--display); font-weight: 700; font-size: 24px; color: var(--ink); }
+.viz-detail { color: var(--ink-dim); font-size: 15px; line-height: 1.55; margin-top: 10px; }
+.viz-progress {
+  height: 4px; background: var(--line); border-radius: 2px; overflow: hidden;
+  max-width: 460px; margin: 26px auto 0;
+}
+.viz-progress span {
+  display: block; height: 100%; width: 0; background: var(--amber);
+  border-radius: 2px; transition: width .3s linear;
+}
