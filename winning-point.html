@@ -41,9 +41,12 @@
 <div class="app-wrap">
   <a class="detail-back" href="training.html">← Training</a>
   <h1 class="page-title">Winning point visualization</h1>
-  <p class="hint" style="margin-bottom:20px;">A three-minute guided visualization. Find a quiet moment, get comfortable, press start, and let the cues carry you through your winning point.</p>
+  <p class="hint" style="margin-bottom:20px;">A three-minute guided visualization. Find a quiet moment, get comfortable, turn your sound up, press start, and then close your eyes — each cue is read aloud to guide you through your winning point.</p>
 
   <div class="panel">
+    <div class="viz-toolbar">
+      <button class="viz-sound" id="sound-btn" onclick="toggleVoice()" aria-pressed="true" title="Read the cues aloud">🔊 Voice on</button>
+    </div>
     <div class="viz-stage">
       <div class="viz-orb" id="viz-orb"></div>
       <div class="viz-cue">
