@@ -8,11 +8,11 @@ const SUPABASE_URL  = "https://ebyhwddmxoqngvqbgkoo.supabase.co/";       // e.g.
 const SUPABASE_ANON = "sb_publishable_9eAwOE5IexKgr_KezmmQwg_UPYXr3R1";  // the long "anon public" key
 
 // ---- Site root -------------------------------------------------------------
-// Absolute URL of the folder that holds index.html, js/, css/, assets/ and the
-// pages/ directory. It's derived from this script's own URL (this file always
-// lives at <root>/js/supabase.js), so cross-folder navigation works the same
-// whether the calling page is at the root (index.html), under pages/, or under
-// admin/ — and under any hosting subpath (e.g. GitHub Pages' /brightmind/).
+// Absolute URL of the folder that holds index.html and the app pages, plus js/,
+// css/ and assets/. It's derived from this script's own URL (this file always
+// lives at <root>/js/supabase.js), so navigation works the same whether the
+// calling page is at the root (index.html and the app pages) or under admin/ —
+// and under any hosting subpath (e.g. GitHub Pages' /brightmind/).
 // Captured at load time while document.currentScript is still valid.
 const SITE_ROOT = new URL(
   "../",
@@ -57,7 +57,7 @@ if (!/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) || SUPABASE_ANON.startsWit
 async function requireSession() {
   const { data: { session } } = await db.auth.getSession();
   if (!session) {
-    window.location.href = SITE_ROOT + "pages/login.html";
+    window.location.href = SITE_ROOT + "login.html";
     return null;
   }
   return session;
@@ -100,7 +100,7 @@ function landingPage(role) {
   const file = role === "coach"  ? "coach.html"
              : role === "parent" ? "parent.html"
              : "dashboard.html";
-  return SITE_ROOT + "pages/" + file;
+  return SITE_ROOT + file;
 }
 
 async function roleOf(userId) {

@@ -2,20 +2,168 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Redirecting… — BrightMind</title>
-<link rel="canonical" href="pages/coach.html">
-<meta name="robots" content="noindex">
-<script>
-// This page moved into pages/ during the file reorganization. Old URLs —
-// installed-app start_url, bookmarks, open tabs, and password-reset email
-// links — still land here, so forward them to the new location. location.search
-// and location.hash are carried over so deep links keep working: the Supabase
-// recovery token rides in the hash on reset, ?edit= on log, etc.
-location.replace("pages/coach.html" + location.search + location.hash);
-</script>
-<meta http-equiv="refresh" content="0; url=pages/coach.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Dashboard — BrightMind</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BrightMind">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<p>BrightMind has moved. <a href="pages/coach.html">Continue →</a></p>
+<div class="topbar">
+  <a class="brand" href="index.html"><img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span></a>
+  <div class="nav">
+    <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
+    <a href="dashboard.html">Home</a>
+    <a href="log.html">Log</a>
+    <a href="insights.html">Insights</a>
+    <a href="friends.html" id="nav-friends" class="section-hidden">Friends</a>
+    <a href="team.html" id="nav-team" class="section-hidden">Team</a>
+    <a href="coach.html" id="nav-coach" class="active">Coach Dashboard</a>
+    <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
+    <a href="settings.html">Settings</a>
+    <button onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div class="app-wrap">
+  <h1 class="page-title">Coach Dashboard</h1>
+  <div class="page-sub" id="page-sub"></div>
+
+  <!-- ADD PLAYER -->
+  <div class="panel">
+    <div class="panel-title">Add a player</div>
+    <div class="add-row">
+      <input type="email" id="player-email" placeholder="player@example.com" autocomplete="off">
+      <button class="btn" id="addBtn" onclick="addPlayer()" style="width:auto;">Add player</button>
+    </div>
+    <div class="msg" id="add-msg"></div>
+  </div>
+
+  <!-- TEAM OVERVIEW -->
+  <div class="panel">
+    <div class="panel-title">
+      <span style="flex:1;">Team overview · <span id="team-count">0</span> players</span>
+      <div class="toggle" id="team-toggle">
+        <button class="toggle-btn active" data-mode="week" onclick="setTeamMode('week')">This week</button>
+        <button class="toggle-btn" data-mode="all" onclick="setTeamMode('all')">All time</button>
+      </div>
+    </div>
+    <div id="team-stats" class="hint">Loading…</div>
+  </div>
+
+  <!-- TEAM TRENDS -->
+  <div class="panel">
+    <div class="panel-title">
+      <span style="flex:1;">Team trends · average across players</span>
+      <div class="toggle" id="team-trend-toggle">
+        <button class="toggle-btn active" data-range="30" onclick="setTeamTrendRange('30')">30 days</button>
+        <button class="toggle-btn" data-range="all" onclick="setTeamTrendRange('all')">All time</button>
+      </div>
+    </div>
+    <div class="chart-box tall" id="team-trend-box"><canvas id="teamTrendChart"></canvas></div>
+  </div>
+
+  <!-- PLAYER COMPARISON -->
+  <div class="panel">
+    <div class="panel-title">Player comparison · averages (all time)</div>
+    <div class="chart-box tall" id="team-compare-box"><canvas id="teamCompareChart"></canvas></div>
+  </div>
+
+  <!-- ROSTER -->
+  <div class="panel">
+    <div class="panel-title">Your players</div>
+    <div id="roster"><div class="hint">Loading…</div></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div class="panel" id="teams-panel">
+    <div class="panel-title">Teams</div>
+    <div class="add-row">
+      <input type="text" id="team-name" placeholder="New team name (e.g. School Team)">
+      <button class="btn" id="teamAddBtn" onclick="createTeam()" style="width:auto;">Create team</button>
+    </div>
+    <div class="msg" id="team-msg"></div>
+    <div id="teams-list"></div>
+  </div>
+
+  <!-- ANALYZE BY TEAM -->
+  <div class="panel" id="analyze-panel">
+    <div class="panel-title">
+      <span style="flex:1;">Analyze by team</span>
+      <select id="analyze-team" onchange="onAnalyzeTeamChange()" style="width:auto; padding:6px 10px; font-size:13px;"></select>
+    </div>
+
+    <div id="analyze-empty" class="empty section-hidden">Create a team above to analyze it here.</div>
+
+    <div id="analyze-body">
+      <div class="detail-sub" style="display:flex; align-items:center; gap:10px;">
+        <span style="flex:1;">Summary</span>
+        <div class="toggle" id="analyze-toggle">
+          <button class="toggle-btn active" data-mode="week" onclick="setAnalyzeMode('week')">This week</button>
+          <button class="toggle-btn" data-mode="all" onclick="setAnalyzeMode('all')">All time</button>
+        </div>
+      </div>
+      <div id="analyze-stats" class="hint"></div>
+
+      <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
+        <span style="flex:1;">Team trends · average across members</span>
+        <div class="toggle" id="analyze-trend-toggle">
+          <button class="toggle-btn active" data-range="30" onclick="setAnalyzeTrendRange('30')">30 days</button>
+          <button class="toggle-btn" data-range="all" onclick="setAnalyzeTrendRange('all')">All time</button>
+        </div>
+      </div>
+      <div class="chart-box tall" id="analyze-trend-box"><canvas id="analyzeTrendChart"></canvas></div>
+
+      <div class="detail-sub" style="margin-top:18px;">Member comparison · averages (all time)</div>
+      <div class="chart-box tall" id="analyze-compare-box"><canvas id="analyzeCompareChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- INDIVIDUAL DETAIL -->
+  <div class="panel section-hidden" id="detail-panel">
+    <div class="panel-title">
+      <span style="flex:1;"><span id="detail-name"></span></span>
+    </div>
+
+    <div class="detail-sub">Summary (all time)</div>
+    <div id="detail-stats" class="hint"></div>
+
+    <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
+      <span style="flex:1;">Trends</span>
+      <div class="toggle" id="detail-trend-toggle">
+        <button class="toggle-btn active" data-range="30" onclick="setDetailRange('30')">30 days</button>
+        <button class="toggle-btn" data-range="all" onclick="setDetailRange('all')">All time</button>
+      </div>
+    </div>
+    <div class="chart-box tall" id="detail-trend-box"><canvas id="detailChart"></canvas></div>
+
+    <div class="detail-sub" style="margin-top:18px;">Sleep vs. performance</div>
+    <div class="chart-box" id="detail-scatter-box"><canvas id="detailScatter"></canvas></div>
+
+    <div class="detail-sub" style="margin-top:18px; display:flex; align-items:center; gap:10px;">
+      <span style="flex:1;">Recent entries</span>
+      <div class="toggle" id="detail-recent-toggle">
+        <button class="toggle-btn active" data-mode="7" onclick="setDetailRecent('7')">Last 7</button>
+        <button class="toggle-btn" data-mode="all" onclick="setDetailRecent('all')">All</button>
+      </div>
+    </div>
+    <div id="detail-recent"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="js/supabase.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/logdetail.js"></script>
+<script>window.ROSTER = { role: "coach", one: "player", many: "players", teams: true };</script>
+<script src="js/roster.js"></script>
 </body>
 </html>
