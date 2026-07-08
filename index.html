@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BrightMind Athletics</title>
+<title>BrightMind Athletics — Train the mind like the body</title>
+<meta name="description" content="BrightMind is a two-minute daily log for training, mind, and recovery. Build streaks, spot trends, and stay connected with your coach and parent.">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -16,57 +17,161 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="auth-wrap">
-  <div class="panel" style="width:100%; max-width:400px;">
-    <div class="brand brand-auth" style="margin-bottom:6px; font-size:22px;">
-      <img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span>
-    </div>
-    <p class="hint" style="text-align:center; margin-bottom:22px;">Log training, mind, and recovery in under 2 minutes.</p>
-
-    <div class="tabs">
-      <div class="tab active" id="tab-login" onclick="switchTab('login')">Log in</div>
-      <div class="tab" id="tab-signup" onclick="switchTab('signup')">Sign up</div>
-    </div>
-
-    <div class="field">
-      <label for="email">Email</label>
-      <input type="email" id="email" autocomplete="email" placeholder="you@example.com">
-    </div>
-    <div class="field">
-      <label for="password">Password</label>
-      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
-    </div>
-
-    <!-- Signup-only fields -->
-    <div id="signup-fields" class="section-hidden">
-      <div class="field">
-        <label for="role">Role</label>
-        <select id="role">
-          <option value="player">Player</option>
-          <option value="coach">Coach</option>
-          <option value="parent">Parent</option>
-        </select>
-      </div>
-      <label class="consent" id="consentBox" for="consent">
-        <input type="checkbox" id="consent">
-        <span>
-          <span class="consent-label">Consent Agreement</span>
-          I agree that the data I enter will be stored and used for app features.
-        </span>
-      </label>
-    </div>
-
-    <button class="btn" id="submitBtn" onclick="submitAuth()">Log in</button>
-    <p class="hint" style="text-align:center; margin-top:12px;">
-      <a href="#" id="forgotLink" onclick="sendReset(); return false;"
-         style="color:var(--amber); text-decoration:none;">Forgot password?</a>
-    </p>
-    <div class="msg" id="msg"></div>
+<div class="topbar">
+  <div class="brand"><img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span></div>
+  <div class="nav">
+    <a href="#features">Features</a>
+    <a href="#install">Install</a>
+    <a href="#team">Team</a>
+    <a class="landing-login" id="nav-login" href="login.html">Log in</a>
   </div>
 </div>
 
+<main class="landing">
+
+  <!-- ---------- Hero ---------- -->
+  <section class="hero">
+    <span class="hero-eyebrow">Mind • Body • Recovery</span>
+    <h1 class="hero-title">Train the mind<br>like the body.</h1>
+    <p class="hero-sub">
+      BrightMind is a two-minute daily check-in for athletes. Log your training,
+      mindset, and recovery, keep your streak alive, and watch the trends that
+      actually move your game.
+    </p>
+    <div class="hero-cta">
+      <a class="btn hero-btn" id="primary-cta" href="login.html">Get started — it's free</a>
+      <a class="hero-link" href="#features">See how it works →</a>
+    </div>
+  </section>
+
+  <!-- ---------- Features ---------- -->
+  <section id="features" class="landing-section">
+    <div class="section-head">
+      <h2 class="section-title">Everything in one quick log</h2>
+      <p class="section-lead">Small habits, tracked consistently, compound into real gains.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⏱️</div>
+        <h3>Two-minute logging</h3>
+        <p>Capture training load, mood, sleep, and recovery in under two minutes a day.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <h3>Streaks that stick</h3>
+        <p>A daily streak keeps you honest. Miss a day and it resets — so you keep showing up.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Insights &amp; trends</h3>
+        <p>See how sleep, effort, and mindset move together over 30 days or your whole history.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤝</div>
+        <h3>Friends &amp; head-to-head</h3>
+        <p>Compare streaks with teammates and keep each other accountable.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Coach dashboard</h3>
+        <p>Coaches see their roster's training and recovery at a glance, and manage teams.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👨‍👩‍👧</div>
+        <h3>Parent view</h3>
+        <p>Parents stay in the loop on their athlete's wellbeing — with consent, always.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Install / Add to Home Screen ---------- -->
+  <section id="install" class="landing-section">
+    <div class="section-head">
+      <h2 class="section-title">Add BrightMind to your home screen</h2>
+      <p class="section-lead">
+        BrightMind is a web app — no app store needed. Install it from your browser
+        and it opens full-screen, just like a native app.
+      </p>
+    </div>
+
+    <div class="install-grid">
+      <div class="install-card">
+        <div class="install-head"><span class="install-badge"></span> iPhone &amp; iPad — Safari</div>
+        <ol class="install-steps">
+          <li>Open <strong>brightmind</strong> in <strong>Safari</strong>.</li>
+          <li>Tap the <strong>Share</strong> button <span class="kbd">&#x2191;</span> in the toolbar.</li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong> — the BrightMind icon appears on your home screen.</li>
+        </ol>
+      </div>
+      <div class="install-card">
+        <div class="install-head"><span class="install-badge"></span> Android — Chrome</div>
+        <ol class="install-steps">
+          <li>Open <strong>brightmind</strong> in <strong>Chrome</strong>.</li>
+          <li>Tap the <strong>menu</strong> <span class="kbd">&#x22EE;</span> in the top-right corner.</li>
+          <li>Tap <strong>Add to Home screen</strong> (or <strong>Install app</strong>).</li>
+          <li>Confirm with <strong>Add</strong> / <strong>Install</strong>.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="install-note">On desktop Chrome or Edge, look for the <strong>install</strong> icon in the address bar.</p>
+  </section>
+
+  <!-- ---------- Meet the team ---------- -->
+  <section id="team" class="landing-section">
+    <div class="section-head">
+      <h2 class="section-title">Meet the team</h2>
+      <p class="section-lead">BrightMind is built by two people who care about athletes.</p>
+    </div>
+
+    <div class="team-grid">
+      <div class="team-member">
+        <div class="member-avatar">BN</div>
+        <div class="member-name">Brighten Ng</div>
+        <div class="member-role">Co-founder</div>
+        <p class="member-bio">Shapes the product and the athlete experience behind BrightMind.</p>
+        <a class="member-link" href="https://brightenng" target="_blank" rel="noopener">Profile →</a>
+      </div>
+      <div class="team-member">
+        <div class="member-avatar">HZ</div>
+        <div class="member-name">Hansen Zheng</div>
+        <div class="member-role">Co-founder</div>
+        <p class="member-bio">Builds the app end to end — from the log screen to the data behind it.</p>
+        <a class="member-link" href="https://github.com/hansenvalueinvesting" target="_blank" rel="noopener">GitHub →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Closing CTA ---------- -->
+  <section class="landing-cta">
+    <h2 class="section-title">Ready to start your streak?</h2>
+    <a class="btn hero-btn" id="secondary-cta" href="login.html">Create your free account</a>
+  </section>
+
+</main>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
-<script src="js/auth.js"></script>
+<script>
+// If the visitor already has a session, point the calls-to-action straight
+// into the app instead of the login screen. Fails silently if Supabase or the
+// CDN isn't available — the default login.html links still work.
+(async () => {
+  try {
+    if (typeof db === "undefined" || !dbReady) return;
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) return;
+    const dest = landingPage(await roleOf(session.user.id));
+    document.getElementById("primary-cta").textContent = "Open BrightMind →";
+    document.getElementById("primary-cta").setAttribute("href", dest);
+    document.getElementById("secondary-cta").textContent = "Open BrightMind →";
+    document.getElementById("secondary-cta").setAttribute("href", dest);
+    const nav = document.getElementById("nav-login");
+    nav.textContent = "Open app";
+    nav.setAttribute("href", dest);
+  } catch (e) { /* keep default login links */ }
+})();
+</script>
 </body>
 </html>
