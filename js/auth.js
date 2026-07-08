@@ -75,6 +75,32 @@ async function submitAuth() {
   }
 }
 
+// ---- Password reset ---------------------------------------------------------
+// Sends a recovery email via Supabase Auth. The link lands the user on
+// reset.html (same folder as this page, so the app works under any subpath,
+// including GitHub Pages' /brightmind/). reset.js completes the change there.
+async function sendReset() {
+  const email = document.getElementById("email").value.trim();
+  if (!email) {
+    setMsg("Enter your email above first, then tap “Forgot password?” again.", "error");
+    document.getElementById("email").focus();
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  setMsg("Sending reset link…");
+
+  // Resolve reset.html relative to the current page → correct under any host/subpath.
+  const redirectTo = new URL("reset.html", window.location.href).href;
+  const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo });
+
+  btn.disabled = false;
+  // Don't reveal whether the address has an account (avoids email enumeration).
+  if (error) { setMsg(error.message, "error"); return; }
+  setMsg("If that email has an account, a reset link is on its way. Check your inbox (and spam).", "ok");
+}
+
 // Clear the consent error highlight once the box is ticked.
 document.getElementById("consent").addEventListener("change", (e) => {
   if (e.target.checked) document.getElementById("consentBox").classList.remove("invalid");
