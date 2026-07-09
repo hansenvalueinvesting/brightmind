@@ -720,3 +720,44 @@ $$;
 
 grant execute on function public.admin_overview(text)      to anon, authenticated;
 grant execute on function public.admin_relationships(text) to anon, authenticated;
+
+-- ----------------------------------------------------------------
+-- Training sessions — one row per completed guided training activity
+-- (box breathing, winning point visualization, ghosting, …). Powers the
+-- stats and 7-day breakdown at the top of the Training page. Safe to re-run.
+-- ----------------------------------------------------------------
+create table if not exists public.training_sessions (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  activity         text not null,               -- 'box_breathing' | 'winning_point' | 'ghosting'
+  duration_seconds integer,                      -- best-effort length of the session
+  completed_at     timestamptz not null default now(),
+  created_at       timestamptz not null default now()
+);
+
+create index if not exists training_sessions_user_time_idx
+  on public.training_sessions (user_id, completed_at desc);
+
+alter table public.training_sessions enable row level security;
+
+-- Each user reads/writes only their own training rows.
+drop policy if exists "own training - select" on public.training_sessions;
+create policy "own training - select" on public.training_sessions
+  for select using (auth.uid() = user_id);
+drop policy if exists "own training - insert" on public.training_sessions;
+create policy "own training - insert" on public.training_sessions
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "own training - delete" on public.training_sessions;
+create policy "own training - delete" on public.training_sessions
+  for delete using (auth.uid() = user_id);
+
+-- A coach/parent may read the training of players they're linked to
+-- (extra permissive SELECT, combined with "own training" via OR — mirrors sleep/logs).
+drop policy if exists "coach reads player training" on public.training_sessions;
+create policy "coach reads player training" on public.training_sessions
+  for select using (
+    exists (
+      select 1 from public.coach_players cp
+      where cp.coach_id = auth.uid() and cp.player_id = training_sessions.user_id
+    )
+  );

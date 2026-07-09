@@ -69,6 +69,23 @@ async function signOut() {
   window.location.href = SITE_ROOT + "index.html";
 }
 
+// Record one completed training activity (box breathing, winning point
+// visualization, ghosting, …). Called from each activity's finish(); the
+// Training page reads these rows for its stats and 7-day breakdown. Best-effort
+// — a failed insert (e.g. offline) is swallowed so it never blocks the UI.
+async function logTrainingSession(activity, durationSeconds) {
+  if (!dbReady) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) return;
+    await db.from("training_sessions").insert({
+      user_id: session.user.id,
+      activity,
+      duration_seconds: durationSeconds != null ? Math.round(durationSeconds) : null,
+    });
+  } catch (_) { /* non-blocking */ }
+}
+
 // ---- Streak decay (display-side) ------------------------------------------
 // profiles.streak_count is only recomputed when a player submits a log
 // (see updateStreak in js/log.js). Between logs the stored value goes stale,

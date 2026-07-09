@@ -152,6 +152,7 @@ function finish() {
   barEl.style.width = "100%";
   remainEl.textContent = "Nice work — session complete.";
   speak("Complete. Carry that winning feeling into your next match.");
+  logTrainingSession("winning_point", TOTAL);
 }
 
 function toggleRun() {

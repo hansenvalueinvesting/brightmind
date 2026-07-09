@@ -126,6 +126,7 @@ function finish() {
   countEl.textContent = "✓";
   square.dataset.phase = "done";
   remainEl.textContent = "Nice work — session complete.";
+  logTrainingSession("box_breathing", totalSecs);
 }
 
 function toggleRun() {
