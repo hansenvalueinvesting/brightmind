@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghosting — BrightMind</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BrightMind">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <a class="brand" href="index.html"><img class="brand-logo" src="assets/brand-mark.png" alt="">BrightMind<span class="dot">.</span></a>
+  <div class="nav">
+    <span class="user-chip" id="user-chip"><span class="user-name"></span><span class="user-role"></span></span>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-controls="nav-menu" aria-expanded="false" onclick="toggleNav(event)">
+      <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
+    </button>
+    <div class="nav-menu" id="nav-menu">
+      <a href="dashboard.html">Home</a>
+      <a href="log.html">Log</a>
+      <a href="insights.html">Insights</a>
+      <a href="training.html" class="active">Training</a>
+      <a href="friends.html" id="nav-friends" class="section-hidden">Friends</a>
+      <a href="team.html" id="nav-team" class="section-hidden">Team</a>
+      <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
+      <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
+      <a href="settings.html">Settings</a>
+      <button onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-wrap">
+  <a class="detail-back" href="training.html">← Training</a>
+  <h1 class="page-title">Ghosting</h1>
+  <p class="hint" style="margin-bottom:20px;">Place your phone flat on the T. Each work interval, follow the arrow to that corner of the court, return to the T, and tap the screen to get the next one. Rest between sets.</p>
+
+  <div class="panel">
+    <div class="ghost-config" id="ghost-config">
+      <div class="field">
+        <label for="work-sel">Work</label>
+        <select id="work-sel">
+          <option value="30">30 sec</option>
+          <option value="45">45 sec</option>
+          <option value="60">60 sec</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="rest-sel">Rest</label>
+        <select id="rest-sel">
+          <option value="15">15 sec</option>
+          <option value="30" selected>30 sec</option>
+          <option value="45">45 sec</option>
+          <option value="60">60 sec</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sets-sel">Sets</label>
+        <select id="sets-sel">
+          <option value="4">4</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
+          <option value="10">10</option>
+          <option value="12" selected>12</option>
+          <option value="14">14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="ghost-stage" id="ghost-stage" type="button" data-phase="idle" onclick="tap()">
+      <div class="ghost-arrow" id="ghost-arrow" aria-hidden="true">
+        <svg viewBox="0 0 100 100"><path d="M50 14 L50 86 M50 14 L30 42 M50 14 L70 42" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ghost-label" id="ghost-label">Ready</div>
+      <div class="ghost-hint" id="ghost-hint">Set your intervals, then press start.</div>
+    </button>
+
+    <div class="ghost-meta">
+      <div class="ghost-chip" id="chip-phase">Idle</div>
+      <div class="ghost-chip ghost-chip-time"><span id="ghost-timer">0:30</span></div>
+      <div class="ghost-chip">Set <span id="ghost-set">0</span>/<span id="ghost-sets">12</span></div>
+      <div class="ghost-chip"><span id="ghost-reps">0</span> runs</div>
+    </div>
+
+    <div class="breathe-controls">
+      <button class="btn" id="start-btn" onclick="toggleRun()">Start</button>
+      <button class="btn btn-ghost" id="reset-btn" onclick="resetSession()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/ghosting.js"></script>
+</body>
+</html>

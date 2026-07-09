@@ -93,6 +93,7 @@ function effectiveStreak(streakCount, lastLogDate) {
 const PAGE_ROLE = {
   "dashboard.html": "player", "log.html": "player", "insights.html": "player",
   "training.html": "player", "box-breathing.html": "player", "winning-point.html": "player",
+  "ghosting.html": "player",
   "friends.html": "player", "team.html": "player",
   "coach.html": "coach", "parent.html": "parent",
 };
