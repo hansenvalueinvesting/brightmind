@@ -49,13 +49,56 @@ const soundBtn = document.getElementById("sound-btn");
 const synth = window.speechSynthesis || null;
 let voiceOn = true;          // toggled by the sound button
 let lastSpokenIdx = -1;      // stage last spoken, so each cue is read once
+let chosenVoice = null;      // best available voice, picked once voices load
+
+// Every platform ships a mix of flat, robotic local voices and much warmer
+// "natural"/"neural"/cloud voices — but if we don't set u.voice the engine
+// falls back to the OS default, which is usually the robotic one. So score
+// the installed voices and pick the most natural English one ourselves.
+// getVoices() is often empty on first call and populates asynchronously, so
+// we also re-pick on the `voiceschanged` event.
+function pickVoice() {
+  if (!synth) return;
+  const voices = synth.getVoices();
+  if (!voices.length) return;
+
+  const en = voices.filter((v) => /^en([-_]|$)/i.test(v.lang));
+  const pool = en.length ? en : voices.slice();
+
+  // Named voices widely regarded as natural, best first.
+  const preferred = [
+    "Google US English", "Google UK English Female", "Google UK English Male",
+    "Samantha", "Ava", "Allison", "Serena", "Zoe",          // Apple enhanced
+    "Microsoft Aria", "Microsoft Jenny", "Microsoft Sonia",  // Windows neural
+    "Microsoft Libby", "Microsoft Michelle", "Microsoft Guy",
+  ];
+  const score = (v) => {
+    let s = 0;
+    const rank = preferred.findIndex((name) => v.name.includes(name));
+    if (rank !== -1) s += 100 - rank;                 // earlier in list = better
+    if (/natural|neural|enhanced|premium|online/i.test(v.name)) s += 40;
+    if (!v.localService) s += 15;                     // cloud voices are richer
+    if (/en-US/i.test(v.lang)) s += 3;
+    return s;
+  };
+  chosenVoice = pool.sort((a, b) => score(b) - score(a))[0] || null;
+}
+
+if (synth) {
+  pickVoice();
+  // Older Safari uses the property, others use the event — set both.
+  synth.addEventListener?.("voiceschanged", pickVoice);
+  synth.onvoiceschanged = pickVoice;
+}
 
 function speak(text) {
   if (!voiceOn || !synth) return;
   synth.cancel();            // drop any in-flight utterance first
+  if (!chosenVoice) pickVoice();   // last chance if voices loaded late
   const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.9;              // a touch slower for a calm, guided feel
-  u.pitch = 1;
+  if (chosenVoice) { u.voice = chosenVoice; u.lang = chosenVoice.lang; }
+  u.rate = 0.92;             // a touch slower for a calm, guided feel
+  u.pitch = 1.02;            // a hair brighter reads as warmer, less flat
   synth.speak(u);
 }
 
