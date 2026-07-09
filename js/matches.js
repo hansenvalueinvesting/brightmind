@@ -178,13 +178,13 @@ function renderResultsChart(set) {
   });
 }
 
-// ---------- Performance vs. opponent level ----------
+// ---------- Performance vs. opponent rating ----------
 function renderOppChart(set) {
   const pts = set
     .filter(m => m.opponent_level != null && m.perf_rating != null)
     .map(m => ({ x: Number(m.opponent_level), y: m.perf_rating, result: parseResult(m.final_score) }));
   const cv = chartCanvas("opp-box", "oppChart", pts.length >= 1,
-    "Log an opponent level and performance to compare them here.");
+    "Log an opponent rating and performance to compare them here.");
   if (!cv) return;
   new Chart(cv, {
     type: "scatter",
@@ -205,7 +205,7 @@ function renderOppChart(set) {
         } } }
       },
       scales: {
-        x: { title: { display: true, text: "Opponent level", color: AXIS }, grid: { color: GRID }, ticks: { color: AXIS } },
+        x: { title: { display: true, text: "Opponent rating", color: AXIS }, grid: { color: GRID }, ticks: { color: AXIS } },
         y: { min: 0, max: 10, title: { display: true, text: "Performance", color: AXIS }, grid: { color: GRID }, ticks: { color: AXIS } }
       }
     }
