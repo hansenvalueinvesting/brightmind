@@ -178,13 +178,13 @@ function renderResultsChart(set) {
   });
 }
 
-// ---------- Performance vs. opponent level ----------
+// ---------- Performance vs. opponent rating ----------
 function renderOppChart(set) {
   const pts = set
     .filter(m => m.opponent_level != null && m.perf_rating != null)
     .map(m => ({ x: Number(m.opponent_level), y: m.perf_rating, result: parseResult(m.final_score) }));
   const cv = chartCanvas("opp-box", "oppChart", pts.length >= 1,
-    "Log an opponent level and performance to compare them here.");
+    "Log an opponent rating and performance to compare them here.");
   if (!cv) return;
   new Chart(cv, {
     type: "scatter",
@@ -205,7 +205,7 @@ function renderOppChart(set) {
         } } }
       },
       scales: {
-        x: { title: { display: true, text: "Opponent level", color: AXIS }, grid: { color: GRID }, ticks: { color: AXIS } },
+        x: { title: { display: true, text: "Opponent rating", color: AXIS }, grid: { color: GRID }, ticks: { color: AXIS } },
         y: { min: 0, max: 10, title: { display: true, text: "Performance", color: AXIS }, grid: { color: GRID }, ticks: { color: AXIS } }
       }
     }
@@ -221,13 +221,19 @@ function renderList(set) {
     const badge = r === "win" ? '<span class="badge win">Win</span>'
                 : r === "loss" ? '<span class="badge loss">Loss</span>'
                 : '<span class="badge" style="color:var(--ink-dim);border-color:var(--line);">—</span>';
-    const opp = m.opponent_level != null ? `Opp ${esc(m.opponent_level)}` : "Opp –";
-    const score = m.final_score ? ` · ${esc(m.final_score)}` : "";
+    // Lead with the opponent's name when we have it, falling back to the level.
+    const who = m.opponent_name ? `vs ${esc(m.opponent_name)}`
+              : m.opponent_level != null ? `Opp ${esc(m.opponent_level)}`
+              : "Match";
+    const bits = [];
+    if (m.opponent_name && m.opponent_level != null) bits.push(esc(m.opponent_level));
+    if (m.final_score) bits.push(esc(m.final_score));
+    const detail = bits.length ? ` · ${bits.join(" · ")}` : "";
     const perf = m.perf_rating != null ? `${m.perf_rating}/10` : "–";
     return `
       <div class="log-row clickable" onclick="openMatch('${m.id}')">
         <span class="log-date">${esc(m.log_date)}</span>
-        <span style="flex:1; margin:0 12px; color:var(--ink-dim);">${opp}${score}</span>
+        <span style="flex:1; margin:0 12px; color:var(--ink-dim);">${who}${detail}</span>
         ${badge}
         <span style="margin-left:12px; min-width:38px; text-align:right;">${perf}</span>
       </div>`;

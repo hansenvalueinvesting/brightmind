@@ -69,6 +69,7 @@ function fillForm(l) {
   setSlider("soreness", l.soreness);
 
   if (l.is_match_day) {
+    setField("opponent_name", l.opponent_name);
     setField("opponent_level", l.opponent_level);
     setField("final_score", l.final_score);
     setSlider("perf_rating", l.perf_rating);
@@ -148,6 +149,7 @@ async function saveLog() {
     // Sleep is captured once a day on the dashboard (sleep_entries), not here.
     soreness: sld("soreness"),
     is_match_day: isMatch,
+    opponent_name:  isMatch ? (val("opponent_name").trim() || null) : null,
     opponent_level: isMatch ? num("opponent_level") : null,
     final_score:    isMatch ? (val("final_score") || null) : null,
     perf_rating:    isMatch ? sld("perf_rating") : null,
