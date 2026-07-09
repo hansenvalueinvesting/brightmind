@@ -43,6 +43,17 @@
   <h1 class="page-title">Insights</h1>
 
   <div class="panel">
+    <div class="panel-title">
+      <span style="flex:1;">Trends</span>
+      <div class="toggle" id="trend-toggle">
+        <button class="toggle-btn active" data-range="30" onclick="setTrendRange('30')">30 days</button>
+        <button class="toggle-btn" data-range="all" onclick="setTrendRange('all')">All time</button>
+      </div>
+    </div>
+    <div class="chart-box tall" id="trend-box"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <div class="panel">
     <div class="panel-title">Sleep vs. performance
       <button class="info-btn" id="infoBtn" onclick="toggleInfo(true)" aria-label="About this insight" title="About this insight">i</button>
     </div>
@@ -83,6 +94,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/performance.js"></script>
+<script src="js/charts.js"></script>
 <script src="js/insights.js"></script>
 </body>
 </html>
