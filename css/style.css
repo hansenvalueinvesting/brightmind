@@ -578,6 +578,23 @@ input[type=range]::-moz-range-thumb {
 .site-credit a { color: var(--amber); text-decoration: underline; }
 .site-credit a:hover { text-decoration: none; }
 
+/* ---------- Training stats ---------- */
+.train-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  text-align: center; margin-bottom: 20px;
+}
+.train-stat {
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 10px;
+}
+.train-stat-num { font-family: var(--display); font-weight: 700; font-size: 28px; color: var(--amber); line-height: 1; }
+.train-stat-label { color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; }
+.train-chart-head {
+  font-family: var(--display); font-weight: 600; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-dim); margin-bottom: 12px;
+}
+.train-empty { text-align: center; padding: 8px 0; }
+
 /* ---------- Training index ---------- */
 .training-subhead {
   font-family: var(--display); font-weight: 600; font-size: 14px;

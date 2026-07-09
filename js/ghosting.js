@@ -144,6 +144,7 @@ function finish() {
   setConfigDisabled(false);
   updateMeta();
   cueDone();
+  logTrainingSession("ghosting", totalSets * workSec + (totalSets - 1) * restSec);
 }
 
 // Advance when the current phase's timer runs out.

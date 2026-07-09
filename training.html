@@ -42,6 +42,17 @@
   <h1 class="page-title">Training</h1>
   <p class="hint" style="margin-bottom:20px;">Guided courses and activities to build your mental and physical game.</p>
 
+  <div class="panel" id="stats-panel">
+    <div class="train-stats">
+      <div class="train-stat"><div class="train-stat-num" id="stat-all">—</div><div class="train-stat-label">All-time sessions</div></div>
+      <div class="train-stat"><div class="train-stat-num" id="stat-today">—</div><div class="train-stat-label">Today</div></div>
+      <div class="train-stat"><div class="train-stat-num" id="stat-30">—</div><div class="train-stat-label">Last 30 days</div></div>
+    </div>
+    <div class="train-chart-head">Last 7 days</div>
+    <div class="chart-box" id="train-chart-box"><canvas id="trainChart"></canvas></div>
+    <p class="hint train-empty section-hidden" id="train-empty">No sessions yet — complete an activity below and it'll show up here.</p>
+  </div>
+
   <div class="panel">
     <div class="panel-title">Mental training</div>
     <h3 class="training-subhead">Breathing exercises</h3>
@@ -80,6 +91,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/training.js"></script>

@@ -11,6 +11,55 @@ Everything below is safe to re-run (`create or replace` / `grant`).
 
 ---
 
+## 2026-07 — Training session tracking
+
+Covers: the Training page stats + 7-day breakdown. Adds a `training_sessions`
+table (one row per completed guided activity — box breathing, winning point
+visualization, ghosting) that the client writes on completion and reads to
+compute all-time / today / last-30-days counts and the last-7-days stacked bar.
+
+**Status: applied to the live database on 2026-07-09.**
+
+Row-level security mirrors `sleep_entries`: each user reads/writes only their
+own rows, and a linked coach/parent may read a player's rows. Safe to re-run.
+
+```sql
+create table if not exists public.training_sessions (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  activity         text not null,               -- 'box_breathing' | 'winning_point' | 'ghosting'
+  duration_seconds integer,
+  completed_at     timestamptz not null default now(),
+  created_at       timestamptz not null default now()
+);
+
+create index if not exists training_sessions_user_time_idx
+  on public.training_sessions (user_id, completed_at desc);
+
+alter table public.training_sessions enable row level security;
+
+drop policy if exists "own training - select" on public.training_sessions;
+create policy "own training - select" on public.training_sessions
+  for select using (auth.uid() = user_id);
+drop policy if exists "own training - insert" on public.training_sessions;
+create policy "own training - insert" on public.training_sessions
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "own training - delete" on public.training_sessions;
+create policy "own training - delete" on public.training_sessions
+  for delete using (auth.uid() = user_id);
+
+drop policy if exists "coach reads player training" on public.training_sessions;
+create policy "coach reads player training" on public.training_sessions
+  for select using (
+    exists (
+      select 1 from public.coach_players cp
+      where cp.coach_id = auth.uid() and cp.player_id = training_sessions.user_id
+    )
+  );
+```
+
+---
+
 ## 2026-07 — Streak decay on the Team roster
 
 Covers: the streak-decay fix. The stored `streak_count` only changes when a
