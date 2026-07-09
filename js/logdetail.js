@@ -81,6 +81,7 @@ function logDetailHTML(l, editable) {
 
   if (l.is_match_day) {
     html += dSection("Match", [
+      dRow("Opponent", l.opponent_name),
       dRow("Opponent level", l.opponent_level),
       dRow("Final score", l.final_score),
       dRow("Self-rated performance", s("perf_rating")),

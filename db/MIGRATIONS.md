@@ -11,6 +11,23 @@ Everything below is safe to re-run (`create or replace` / `grant`).
 
 ---
 
+## 2026-07 — Opponent name on match logs
+
+Covers: the match section of the daily log now also captures the **opponent's
+name**, shown on the Matches log and in the match detail modal. One new nullable
+column backs it; existing match rows read back unchanged.
+
+**Applied to the live database.** Idempotent, so safe to re-run:
+
+```sql
+alter table public.logs add column if not exists opponent_name text;
+```
+
+Without this column, saving a match-day log fails with a missing-column error
+from Supabase (the log form sends `opponent_name` on every match).
+
+---
+
 ## 2026-07 — Training session tracking
 
 Covers: the Training page stats + 7-day breakdown. Adds a `training_sessions`

@@ -49,6 +49,7 @@ create table public.logs (
 
   -- Match (nullable; only on match day)
   is_match_day       boolean not null default false,
+  opponent_name      text,            -- opponent's name, e.g. 'Alex Chen'
   opponent_level     numeric(4,2),    -- opponent rating, e.g. 5.01
   final_score        text,            -- best-of-five games, e.g. '3-1', '0-3'
   perf_rating        integer,
@@ -232,6 +233,7 @@ alter table public.logs add column if not exists match_type text;
 -- The match panel now captures just opponent level (rating), final score
 -- (best-of-five games), and self-rated performance. Safe to re-run.
 -- ----------------------------------------------------------------
+alter table public.logs add column if not exists opponent_name  text;
 alter table public.logs add column if not exists opponent_level numeric(4,2);
 alter table public.logs add column if not exists final_score    text;
 
