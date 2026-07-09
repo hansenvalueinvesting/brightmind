@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Settings — BrightMind</title>
+<title>Matches — BrightMind</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -27,62 +27,62 @@
       <a href="dashboard.html">Home</a>
       <a href="log.html">Log</a>
       <a href="insights.html">Insights</a>
-      <a href="matches.html">Matches</a>
+      <a href="matches.html" class="active">Matches</a>
       <a href="training.html">Training</a>
       <a href="friends.html" id="nav-friends" class="section-hidden">Friends</a>
       <a href="team.html" id="nav-team" class="section-hidden">Team</a>
       <a href="coach.html" id="nav-coach" class="section-hidden">Coach Dashboard</a>
       <a href="parent.html" id="nav-parent" class="section-hidden">Parent Dashboard</a>
-      <a href="settings.html" class="active">Settings</a>
+      <a href="settings.html">Settings</a>
       <button onclick="signOut()">Sign out</button>
     </div>
   </div>
 </div>
 
 <div class="app-wrap">
-  <h1 class="page-title">Settings</h1>
+  <h1 class="page-title">Matches</h1>
+  <p class="page-sub" id="page-sub"></p>
 
-  <!-- USERNAME -->
   <div class="panel">
-    <div class="panel-title">Username</div>
-    <div class="field">
-      <label for="username">Display name</label>
-      <input type="text" id="username" placeholder="e.g. court_warrior" autocomplete="username">
+    <div class="panel-title">
+      <span style="flex:1;">Overview</span>
+      <div class="toggle" id="range-toggle">
+        <button class="toggle-btn" data-range="10" onclick="setMatchRange('10')">Last 10</button>
+        <button class="toggle-btn active" data-range="all" onclick="setMatchRange('all')">All</button>
+      </div>
     </div>
-    <button class="btn" onclick="saveUsername()">Save username</button>
-    <div class="msg" id="username-msg"></div>
+    <div id="kpis" class="kpi-grid"><div class="empty" style="grid-column:1/-1;">Loading…</div></div>
   </div>
 
-  <!-- EMAIL -->
-  <div class="panel">
-    <div class="panel-title">Email</div>
-    <div class="field">
-      <label for="email">Email address</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-title">Performance over time</div>
+      <div class="chart-box" id="perf-box"><canvas id="perfChart"></canvas></div>
     </div>
-    <button class="btn" onclick="updateEmail()">Update email</button>
-    <div class="msg" id="email-msg"></div>
+    <div class="panel">
+      <div class="panel-title">Results</div>
+      <div class="chart-box" id="results-box"><canvas id="resultsChart"></canvas></div>
+    </div>
   </div>
 
-  <!-- PASSWORD -->
   <div class="panel">
-    <div class="panel-title">Password</div>
-    <div class="field">
-      <label for="password">New password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <div class="field">
-      <label for="password2">Confirm new password</label>
-      <input type="password" id="password2" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <button class="btn" onclick="updatePassword()">Update password</button>
-    <div class="msg" id="password-msg"></div>
+    <div class="panel-title">Performance vs. opponent level</div>
+    <div class="chart-box" id="opp-box"><canvas id="oppChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Matches log</div>
+    <div id="match-list"><div class="empty">Loading…</div></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="js/supabase.js"></script>
 <script src="js/nav.js"></script>
-<script src="js/settings.js"></script>
+<script src="js/performance.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/logdetail.js"></script>
+<script src="js/matches.js"></script>
 </body>
 </html>

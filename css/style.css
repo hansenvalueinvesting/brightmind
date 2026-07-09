@@ -284,6 +284,21 @@ input[type=range]::-moz-range-thumb {
   font-size: 11px; padding: 2px 8px; border-radius: 20px;
   background: var(--panel-2); color: var(--amber); border: 1px solid var(--amber-dim);
 }
+.badge.win  { color: var(--green); border-color: var(--green); }
+.badge.loss { color: var(--red);   border-color: var(--red); }
+
+/* ---------- Matches KPI tiles ---------- */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+.kpi {
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 14px 10px; text-align: center;
+}
+.kpi-num { font-family: var(--mono); font-size: 24px; font-weight: 600; color: var(--amber); }
+.kpi-label {
+  color: var(--ink-dim); font-size: 11px; margin-top: 4px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
 
 /* ---------- Log detail modal ---------- */
 .modal-overlay {
