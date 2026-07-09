@@ -72,9 +72,9 @@ function renderAll() {
     : "No matches logged yet.";
 
   renderKpis(set);
-  renderPerfChart(set);
   renderResultsChart(set);
   renderOppChart(set);
+  renderPerfChart(set);
   renderList(set);
 }
 
@@ -221,21 +221,21 @@ function renderList(set) {
     const badge = r === "win" ? '<span class="badge win">Win</span>'
                 : r === "loss" ? '<span class="badge loss">Loss</span>'
                 : '<span class="badge" style="color:var(--ink-dim);border-color:var(--line);">—</span>';
-    // Lead with the opponent's name when we have it, falling back to the level.
+    // Opponent name, with the opponent's rating in parentheses right after it.
     const who = m.opponent_name ? `vs ${esc(m.opponent_name)}`
-              : m.opponent_level != null ? `Opp ${esc(m.opponent_level)}`
+              : m.opponent_level != null ? "Opponent"
               : "Match";
-    const bits = [];
-    if (m.opponent_name && m.opponent_level != null) bits.push(esc(m.opponent_level));
-    if (m.final_score) bits.push(esc(m.final_score));
-    const detail = bits.length ? ` · ${bits.join(" · ")}` : "";
+    const rating = m.opponent_level != null ? ` (${esc(m.opponent_level)})` : "";
     const perf = m.perf_rating != null ? `${m.perf_rating}/10` : "–";
+    const score = m.final_score ? esc(m.final_score) : "–";
+    // Row order: date · opponent (rating) · performance · win/loss · score.
     return `
       <div class="log-row clickable" onclick="openMatch('${m.id}')">
         <span class="log-date">${esc(m.log_date)}</span>
-        <span style="flex:1; margin:0 12px; color:var(--ink-dim);">${who}${detail}</span>
-        ${badge}
-        <span style="margin-left:12px; min-width:38px; text-align:right;">${perf}</span>
+        <span style="flex:1; margin:0 12px; color:var(--ink-dim);">${who}${rating}</span>
+        <span style="min-width:44px; text-align:right; color:var(--ink-dim);">${perf}</span>
+        <span style="margin-left:12px;">${badge}</span>
+        <span style="margin-left:12px; min-width:38px; text-align:right; color:var(--ink-dim);">${score}</span>
       </div>`;
   }).join("");
 }
