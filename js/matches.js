@@ -226,7 +226,7 @@ function renderList(set) {
               : m.opponent_level != null ? `Opp ${esc(m.opponent_level)}`
               : "Match";
     const bits = [];
-    if (m.opponent_name && m.opponent_level != null) bits.push(`lvl ${esc(m.opponent_level)}`);
+    if (m.opponent_name && m.opponent_level != null) bits.push(esc(m.opponent_level));
     if (m.final_score) bits.push(esc(m.final_score));
     const detail = bits.length ? ` · ${bits.join(" · ")}` : "";
     const perf = m.perf_rating != null ? `${m.perf_rating}/10` : "–";
