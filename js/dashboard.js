@@ -8,10 +8,9 @@ let logs = [];            // every log for this user, ascending by date
 let sleepEntries = [];    // this user's once-a-day sleep rows
 let todaySleep = null;    // today's sleep_entries row, or null if not recorded
 let sleepEditing = false; // show the input form even when today is already recorded
-let trend = null;         // Chart instance
-let statsMode = "week";   // summary: "week" | "all"
-let trendRange = "30";    // trends: "30" | "all"
-let recentMode = "7";     // recent entries: "7" | "all"
+let statsMode = "week";      // summary: "week" | "all"
+let activityRange = "7";     // activity charts: "7" | "30" | "all"
+let recentMode = "7";        // recent entries: "7" | "all"
 
 // Local calendar day as YYYY-MM-DD (matches the log_date convention in log.js).
 const todayStr = () => new Date().toLocaleDateString("en-CA");
@@ -20,7 +19,7 @@ const todayStr = () => new Date().toLocaleDateString("en-CA");
   session = await requireSession();
   if (!session) return;
   await Promise.all([loadProfile(), loadLogs(), loadConnections()]);
-  renderTrend();
+  renderActivity();
   renderRecent();
   renderStats();
   renderSleepCard();
@@ -28,7 +27,7 @@ const todayStr = () => new Date().toLocaleDateString("en-CA");
   // After a log is removed from the detail modal, drop it locally and repaint.
   setLogRemovedHandler(id => {
     logs = logs.filter(l => l.id !== id);
-    renderTrend();
+    renderActivity();
     renderRecent();
     renderStats();
   });
@@ -151,24 +150,60 @@ async function loadConnections() {
       `<span class="conn-val">${val(byRole.parent)}</span></div>`;
 }
 
-// ---------- Trends (all metrics at once) ----------
-function setTrendRange(range) {
-  trendRange = range;
-  toggleActive("#trend-toggle", range, "range");
-  renderTrend();
+// ---------- Activity (session-type pie + daily-hours bar) ----------
+// Distinct colour per session type; unknown types fall back to grey.
+const SESSION_COLORS = {
+  "Solo practice":    "#ffb000",
+  "Match play":       "#f85149",
+  "Partner drills":   "#3fb950",
+  "Private lesson":   "#58a6ff",
+  "Group clinic":     "#bc8cff",
+  "Ghosting/fitness": "#ff9e64",
+  "Rest day":         "#8b96a5",
+};
+
+function setActivityRange(range) {
+  activityRange = range;
+  toggleActive("#activity-toggle", range, "range");
+  renderActivity();
 }
 
-function renderTrend() {
-  const box = document.getElementById("trend-box");
-  if (trend) { trend.destroy(); trend = null; }
+function renderActivity() {
+  const set = activityRange === "all" ? logs : rangeSlice(logs, Number(activityRange));
+  renderTypePie(set);
+  renderHoursBar(set);
+}
 
-  const set = trendRange === "all" ? logs : rangeSlice(logs, 30);
-  if (!set.length) {
-    box.innerHTML = '<div class="empty">No logs yet. Your trends appear once you start logging.</div>';
-    return;
-  }
-  box.innerHTML = '<canvas id="trendChart"></canvas>';
-  trend = multiLineChart("trendChart", set.map(l => l.log_date.slice(5)), k => set.map(l => l[k]));
+// Reset a chart box to a fresh <canvas> (avoids Chart.js's "canvas already in
+// use" on re-render) or an empty-state message.
+function activityCanvas(boxId, canvasId, hasData, msg) {
+  const box = document.getElementById(boxId);
+  if (!hasData) { box.innerHTML = `<div class="empty">${msg}</div>`; return null; }
+  box.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+  return canvasId;
+}
+
+// Pie of how many sessions of each type were logged in the range.
+function renderTypePie(set) {
+  const counts = {};
+  for (const l of set) counts[l.session_type] = (counts[l.session_type] || 0) + 1;
+  const labels = Object.keys(counts);
+  const cid = activityCanvas("type-box", "typeChart", labels.length > 0, "No sessions in this range.");
+  if (!cid) return;
+  pieChart(cid, labels, labels.map(k => counts[k]), labels.map(k => SESSION_COLORS[k] || "#8b96a5"));
+}
+
+// Bar of total logged hours per day in the range.
+function renderHoursBar(set) {
+  const byDate = {};
+  for (const l of set) byDate[l.log_date] = (byDate[l.log_date] || 0) + (l.duration_minutes || 0);
+  const dates = Object.keys(byDate).sort();
+  const hasHours = dates.some(d => byDate[d] > 0);
+  const cid = activityCanvas("hours-box", "hoursChart", hasHours, "No training time in this range.");
+  if (!cid) return;
+  barChart(cid, dates.map(d => d.slice(5)),
+    [{ label: "Hours", data: dates.map(d => Math.round(byDate[d] / 60 * 10) / 10), backgroundColor: "#ffb000" }],
+    { xTicks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } });
 }
 
 // ---------- Recent entries ----------

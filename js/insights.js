@@ -7,6 +7,8 @@
 // ============================================================
 
 let session = null;
+let logs = [];            // every log for this user, ascending by date
+let trendRange = "30";    // trends: "30" | "all"
 
 (async () => {
   session = await requireSession();
@@ -15,35 +17,47 @@ let session = null;
 
 async function load() {
   // Sleep now lives in its own once-a-day table; pull it alongside the logs and
-  // match by date. Fall back to any legacy sleep_hours still on old log rows.
-  const [{ data }, { data: sleep }] = await Promise.all([
-    db.from("logs")
-      .select("log_date, sleep_hours, sleep_quality, perf_rating, mood_after, confidence, focus, stress, soreness, screen_time_hours, is_match_day")
-      .eq("user_id", session.user.id),
-    db.from("sleep_entries")
-      .select("entry_date, sleep_hours, sleep_quality")
-      .eq("user_id", session.user.id),
+  // merge by date (attachSleep). Fall back to any legacy sleep on old log rows.
+  const [{ data: logData }, { data: sleep }] = await Promise.all([
+    db.from("logs").select("*")
+      .eq("user_id", session.user.id)
+      .order("log_date", { ascending: true }),
+    db.from("sleep_entries").select("*").eq("user_id", session.user.id),
   ]);
+  logs = logData || [];
+  attachSleep(logs, sleep || []);
 
-  // Merge each day's sleep entry onto its log so the performance score
-  // (and the X axis) see sleep hours + quality. Legacy sleep already on
-  // old log rows is kept when there's no entry for that date.
-  const sleepByDate = {};
-  for (const s of (sleep || [])) sleepByDate[s.entry_date] = s;
+  renderTrend();
+  renderScatter();
+}
 
-  // Build points: need sleep hours (X) + a performance value (Y).
-  const points = (data || [])
-    .map(l => {
-      const s = sleepByDate[l.log_date];
-      if (s) {
-        if (s.sleep_hours   != null) l.sleep_hours   = s.sleep_hours;
-        if (s.sleep_quality != null) l.sleep_quality = s.sleep_quality;
-      }
-      return {
-        x: l.sleep_hours,
-        y: l.is_match_day && l.perf_rating != null ? l.perf_rating : computePerformance(l)
-      };
-    })
+// ---------- Trends (all metrics at once) — moved here from the dashboard ----------
+function setTrendRange(range) {
+  trendRange = range;
+  toggleActive("#trend-toggle", range, "range");
+  renderTrend();
+}
+
+function renderTrend() {
+  const box = document.getElementById("trend-box");
+  const set = trendRange === "all" ? logs : rangeSlice(logs, 30);
+  if (!set.length) {
+    box.innerHTML = '<div class="empty">No logs yet. Your trends appear once you start logging.</div>';
+    return;
+  }
+  box.innerHTML = '<canvas id="trendChart"></canvas>';
+  multiLineChart("trendChart", set.map(l => l.log_date.slice(5)), k => set.map(l => l[k]));
+}
+
+// ---------- Sleep vs. performance scatter ----------
+function renderScatter() {
+  // Build points: need sleep hours (X) + a performance value (Y). On a match
+  // day use the self-rating; otherwise the composite daily performance score.
+  const points = logs
+    .map(l => ({
+      x: l.sleep_hours,
+      y: l.is_match_day && l.perf_rating != null ? l.perf_rating : computePerformance(l)
+    }))
     .filter(p => p.x != null && p.y != null);
 
   const headline = document.getElementById("headline");

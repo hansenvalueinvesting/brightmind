@@ -99,7 +99,22 @@ function barChart(canvasId, labels, datasets, opts = {}) {
       plugins: { legend: { display: datasets.length > 1, labels: { color: AXIS, boxWidth: 12, font: { size: 11 } } } },
       scales: {
         y: Object.assign({ beginAtZero: true, grid: { color: GRID }, ticks: { color: AXIS } }, opts.yMax ? { max: opts.yMax } : {}),
-        x: { grid: { color: GRID }, ticks: { color: AXIS } }
+        x: { grid: { color: GRID }, ticks: Object.assign({ color: AXIS }, opts.xTicks || {}) }
+      }
+    }
+  });
+}
+
+// Pie chart (session-type breakdown). `colors` aligns to `labels`.
+function pieChart(canvasId, labels, data, colors) {
+  return new Chart(document.getElementById(canvasId), {
+    type: "pie",
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#161b22", borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom", labels: { color: AXIS, boxWidth: 12, padding: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed}` } }
       }
     }
   });
