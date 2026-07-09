@@ -262,9 +262,12 @@ input[type=range]::-moz-range-thumb {
 .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
 
 /* ---------- Stat / streak ---------- */
-.streak-panel { text-align: center; }
+.streak-panel {
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
 .streak-num {
-  font-family: var(--display); font-weight: 700; font-size: 64px; line-height: 1;
+  font-family: var(--display); font-weight: 700; font-size: 56px; line-height: 1;
   color: var(--amber); display: flex; align-items: center; justify-content: center; gap: 10px;
 }
 .streak-label { color: var(--ink-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
@@ -415,6 +418,7 @@ input[type=range]::-moz-range-thumb {
 .chip-x:hover { color: var(--red); }
 .chart-box { position: relative; height: 280px; }
 .chart-box.tall { height: 340px; }
+.chart-box.compact { height: 220px; }
 .empty { color: var(--ink-dim); text-align: center; padding: 30px; font-size: 14px; }
 
 /* ============================================================
@@ -433,6 +437,7 @@ input[type=range]::-moz-range-thumb {
 
   .chart-box { height: 240px; }
   .chart-box.tall { height: 300px; }
+  .chart-box.compact { height: 200px; }
   .auth-wrap { padding: 18px; }
 
   /* 16px inputs stop iOS from auto-zooming the page on focus. */
