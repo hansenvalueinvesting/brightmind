@@ -463,6 +463,24 @@ input[type=range]::-moz-range-thumb {
 }
 .nav-menu a.landing-login:hover { background: var(--panel-2); color: var(--amber); }
 
+/* On desktop the landing bar has plenty of room, so lay the links out inline
+   instead of hiding them behind the hamburger. Mobile (<=680px) still gets the
+   compact dropdown, and the authenticated app pages are untouched. */
+@media (min-width: 681px) {
+  .topbar-landing .nav-toggle { display: none; }
+  .topbar-landing .nav-menu {
+    position: static; display: flex; flex-direction: row; align-items: center;
+    min-width: 0; gap: 4px; padding: 0;
+    background: none; border: none; border-radius: 0; box-shadow: none;
+  }
+  .topbar-landing .nav-menu a { padding: 8px 12px; }
+  .topbar-landing .nav-menu a.landing-login {
+    margin-top: 0; margin-left: 6px; padding: 8px 14px;
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .topbar-landing .nav-menu a.landing-login:hover { border-color: var(--amber); }
+}
+
 /* ---------- Hero ---------- */
 .hero { text-align: center; padding: 64px 0 52px; }
 .hero-eyebrow {
