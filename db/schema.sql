@@ -763,3 +763,190 @@ create policy "coach reads player training" on public.training_sessions
       where cp.coach_id = auth.uid() and cp.player_id = training_sessions.user_id
     )
   );
+
+-- ----------------------------------------------------------------
+-- ADMIN — FULL DATABASE VISIBILITY
+-- Two more password-gated, security-definer RPCs that back the admin
+-- page's per-user activity drill-down and its raw "Database" tab. Same
+-- shared password as admin_overview / admin_relationships above (checked
+-- INSIDE each function so the data — not just the UI — is gated), and
+-- granted to `anon` because the admin visitor is usually not logged in.
+-- Placed at the end of the file so every table they read already exists.
+-- Safe to re-run (create or replace / grant).
+-- ----------------------------------------------------------------
+
+-- Everything about ONE user: full account + sign-in details, every raw
+-- activity row (logs, training sessions, sleep entries), and the user's
+-- relationships (coaches/parents, players, friends). Loaded lazily when an
+-- account accordion is expanded on the admin Users tab.
+create or replace function public.admin_user_detail(p_pass text, p_user_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  result jsonb;
+begin
+  if p_pass is distinct from 'BingBoingChing' then
+    raise exception 'Unauthorized';
+  end if;
+
+  select jsonb_build_object(
+    -- Account + sign-in details straight off auth.users.
+    'account', (
+      select row_to_json(a) from (
+        select u.id,
+               u.email::text                        as email,
+               (u.raw_user_meta_data->>'username')   as username,
+               coalesce(pr.role, 'player')           as role,
+               u.created_at,
+               u.last_sign_in_at,
+               u.email_confirmed_at,
+               u.updated_at                          as account_updated_at,
+               (u.raw_app_meta_data->>'provider')    as provider,
+               (u.raw_app_meta_data->'providers')    as providers,
+               pr.consent_at,
+               coalesce(pr.streak_count, 0)          as streak_count,
+               pr.last_log_date
+        from auth.users u
+        left join public.profiles pr on pr.id = u.id
+        where u.id = p_user_id
+      ) a
+    ),
+    -- Every raw log row (matches are the subset with is_match_day = true).
+    'logs', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.logs l where l.user_id = p_user_id
+            order by l.log_date desc, l.created_at desc) t
+    ),
+    -- Every guided training session.
+    'training', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.training_sessions ts where ts.user_id = p_user_id
+            order by ts.completed_at desc) t
+    ),
+    -- Every once-a-day sleep entry.
+    'sleep', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.sleep_entries s where s.user_id = p_user_id
+            order by s.entry_date desc) t
+    ),
+    -- Adults (coaches / parents) linked to this user.
+    'coaches', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb) from (
+        select au.id,
+               coalesce(au.raw_user_meta_data->>'username', au.email) as name,
+               au.email::text                       as email,
+               coalesce(apr.role, 'coach')          as role
+        from public.coach_players cp
+        join auth.users au           on au.id = cp.coach_id
+        left join public.profiles apr on apr.id = cp.coach_id
+        where cp.player_id = p_user_id
+        order by coalesce(apr.role, 'coach'),
+                 lower(coalesce(au.raw_user_meta_data->>'username', au.email))
+      ) t
+    ),
+    -- Players linked to this user (when the user is a coach / parent).
+    'players', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb) from (
+        select pu.id,
+               coalesce(pu.raw_user_meta_data->>'username', pu.email) as name,
+               pu.email::text as email
+        from public.coach_players cp
+        join auth.users pu on pu.id = cp.player_id
+        where cp.coach_id = p_user_id
+        order by lower(coalesce(pu.raw_user_meta_data->>'username', pu.email))
+      ) t
+    ),
+    -- Friendships (accepted or pending) that involve this user.
+    'friends', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb) from (
+        select fu.id,
+               coalesce(fu.raw_user_meta_data->>'username', fu.email) as name,
+               fu.email::text as email,
+               f.status,
+               case when f.requester_id = p_user_id then 'outgoing' else 'incoming' end as direction
+        from public.friendships f
+        join auth.users fu
+          on fu.id = case when f.requester_id = p_user_id then f.addressee_id else f.requester_id end
+        where f.requester_id = p_user_id or f.addressee_id = p_user_id
+        order by f.status, lower(coalesce(fu.raw_user_meta_data->>'username', fu.email))
+      ) t
+    )
+  ) into result;
+
+  return result;
+end;
+$$;
+
+-- The whole database, table by table, for the admin "Database" tab. Each
+-- key is an array of that table's rows. `users` is a safe subset of
+-- auth.users (no password hashes / tokens); everything else is the full
+-- public table. Roster-sized data, so returning it all at once is fine.
+create or replace function public.admin_tables(p_pass text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  result jsonb;
+begin
+  if p_pass is distinct from 'BingBoingChing' then
+    raise exception 'Unauthorized';
+  end if;
+
+  select jsonb_build_object(
+    'users', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb) from (
+        select u.id,
+               u.email::text                       as email,
+               (u.raw_user_meta_data->>'username')  as username,
+               u.created_at,
+               u.last_sign_in_at,
+               u.email_confirmed_at
+        from auth.users u
+        order by u.created_at
+      ) t
+    ),
+    'profiles', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.profiles order by created_at) t
+    ),
+    'logs', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.logs order by log_date desc, created_at desc) t
+    ),
+    'sleep_entries', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.sleep_entries order by entry_date desc) t
+    ),
+    'training_sessions', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.training_sessions order by completed_at desc) t
+    ),
+    'coach_players', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.coach_players order by created_at) t
+    ),
+    'teams', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.teams order by created_at) t
+    ),
+    'team_members', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.team_members order by created_at) t
+    ),
+    'friendships', (
+      select coalesce(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      from (select * from public.friendships order by created_at) t
+    )
+  ) into result;
+
+  return result;
+end;
+$$;
+
+grant execute on function public.admin_user_detail(text, uuid) to anon, authenticated;
+grant execute on function public.admin_tables(text)            to anon, authenticated;

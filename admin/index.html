@@ -49,6 +49,7 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="users" id="tab-users">Users</button>
       <button class="admin-tab" data-tab="network" id="tab-network">Relationship map</button>
+      <button class="admin-tab" data-tab="tables" id="tab-tables">Database</button>
     </div>
 
     <!-- USERS TAB -->
@@ -82,6 +83,16 @@
         </div>
         <div class="net-hint">Drag any node to reposition it · hover to see details · color = role, line color = relationship type.</div>
       </div>
+    </section>
+
+    <!-- DATABASE TAB -->
+    <section id="panel-tables" class="section-hidden">
+      <p class="page-sub" style="margin-top:0;">Every table in the database. Pick a table, then filter its rows.</p>
+      <div class="table-tabs" id="table-tabs"></div>
+      <div class="admin-search table-search">
+        <input type="text" id="table-search" placeholder="Filter rows in this table…" autocomplete="off">
+      </div>
+      <div id="table-view"><div class="empty">Loading database…</div></div>
     </section>
   </div>
 </div>

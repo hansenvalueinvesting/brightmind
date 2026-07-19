@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     b.addEventListener("click", () => switchTab(b.dataset.tab)));
   document.querySelectorAll("#net-filter .toggle-btn").forEach(b =>
     b.addEventListener("click", () => setNetFilter(b.dataset.filter)));
+  document.getElementById("table-search").addEventListener("input", renderCurrentTable);
 
   // Skip the gate if we already unlocked this browser tab.
   const saved = sessionStorage.getItem(ADMIN_STORE_KEY);
@@ -102,7 +103,9 @@ function switchTab(tab) {
   document.querySelectorAll(".admin-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
   document.getElementById("panel-users").classList.toggle("section-hidden", tab !== "users");
   document.getElementById("panel-network").classList.toggle("section-hidden", tab !== "network");
+  document.getElementById("panel-tables").classList.toggle("section-hidden", tab !== "tables");
   if (tab === "network") startNetwork();
+  if (tab === "tables") loadTables();
 }
 
 // ---------- Users tab ----------
@@ -157,6 +160,7 @@ function userRow(u) {
       <div class="acc-body">
         ${accountInfo(u)}
         ${role === "player" ? playerStats(u) : ""}
+        <div class="acc-detail"></div>
       </div>
     </div>`;
 }
@@ -198,7 +202,203 @@ function playerStats(u) {
     </div>`;
 }
 
-function toggleAcc(headEl) { headEl.parentElement.classList.toggle("open"); }
+function toggleAcc(headEl) {
+  const acc = headEl.parentElement;
+  const willOpen = !acc.classList.contains("open");
+  acc.classList.toggle("open");
+  if (willOpen) loadDetail(acc);   // pull full activity the first time it opens
+}
+
+// ---------- Per-user activity drill-down ----------
+// Loaded lazily (one admin_user_detail RPC per account) the first time an
+// accordion is opened, then cached in the DOM so re-opening is instant.
+async function loadDetail(acc) {
+  const box = acc.querySelector(".acc-detail");
+  if (!box || box.dataset.loaded === "1" || box.dataset.loading === "1") return;
+
+  box.dataset.loading = "1";
+  box.innerHTML = '<div class="hint det-hint">Loading full activity…</div>';
+
+  const pass = sessionStorage.getItem(ADMIN_STORE_KEY);
+  const { data, error } = await db.rpc("admin_user_detail", {
+    p_pass: pass, p_user_id: acc.dataset.uid,
+  });
+  box.dataset.loading = "0";
+
+  if (error) {
+    box.innerHTML = `<div class="hint det-hint">Couldn't load activity: ${esc(error.message)}</div>`;
+    return;
+  }
+  box.dataset.loaded = "1";
+  box.innerHTML = renderDetail(data);
+}
+
+function renderDetail(d) {
+  if (!d) return '<div class="hint det-hint">No detail returned.</div>';
+  return signInDetails(d.account || {}) + relationships(d) + activityTables(d);
+}
+
+// Sign-in / account details straight off auth.users.
+function signInDetails(a) {
+  const providers = Array.isArray(a.providers) && a.providers.length
+    ? a.providers.join(", ")
+    : (a.provider || "—");
+  const rows = [
+    ["Last sign-in", a.last_sign_in_at ? fmtDateTime(a.last_sign_in_at) : "Never signed in"],
+    ["Account created", fmtDateTime(a.created_at)],
+    ["Email confirmed", a.email_confirmed_at ? fmtDateTime(a.email_confirmed_at) : "Not confirmed"],
+    ["Sign-in method", providers],
+    ["Profile updated", fmtDateTime(a.account_updated_at)],
+  ];
+  return `<div class="det-head">Sign-in &amp; account</div>
+    <dl class="acct">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
+}
+
+// Who this user is linked to: coaches/parents, players, friends.
+function relationships(d) {
+  const groups = [];
+  if ((d.coaches || []).length)
+    groups.push(["Coaches / parents", d.coaches.map(c =>
+      relChip(c.name, cap(c.role || "coach"), ROLE_COLOR[c.role] || "#8b96a5"))]);
+  if ((d.players || []).length)
+    groups.push(["Players", d.players.map(p =>
+      relChip(p.name, p.email, ROLE_COLOR.player))]);
+  if ((d.friends || []).length)
+    groups.push(["Friends", d.friends.map(f =>
+      relChip(f.name, f.status === "accepted" ? "friend" : (f.direction || "pending"), EDGE_COLOR.friend))]);
+  if (!groups.length) return "";
+
+  return `<div class="det-head">Relationships</div>` + groups.map(([label, chips]) =>
+    `<div class="rel-row"><span class="rel-label">${label}</span>
+       <span class="rel-chips">${chips.join("")}</span></div>`).join("");
+}
+function relChip(name, sub, color) {
+  return `<span class="rel-chip"><span class="rel-dot" style="background:${color}"></span>${esc(name)}${
+    sub ? `<span class="rel-sub">${esc(sub)}</span>` : ""}</span>`;
+}
+
+// Raw activity rows as compact scrollable tables.
+function activityTables(d) {
+  const logs = d.logs || [], training = d.training || [], sleep = d.sleep || [];
+  let html = `<div class="det-head">Activity — ${logs.length} log${logs.length === 1 ? "" : "s"} · ${
+    training.length} training · ${sleep.length} sleep</div>`;
+
+  html += `<div class="det-sub">Logs</div>`;
+  html += dataTable([
+    ["Date", r => fmtDate(r.log_date)],
+    ["Session", r => r.session_type || "—"],
+    ["Min", r => r.duration_minutes ?? "—"],
+    ["Intensity", r => r.intensity ?? "—"],
+    ["Confidence", r => r.confidence ?? "—"],
+    ["Stress", r => r.stress ?? "—"],
+    ["Focus", r => r.focus ?? "—"],
+    ["Sleep h", r => r.sleep_hours ?? "—"],
+    ["Match", r => (r.is_match_day ? matchSummary(r) : "")],
+    ["Notes", r => r.notes || ""],
+  ], logs);
+
+  html += `<div class="det-sub">Training sessions</div>`;
+  html += dataTable([
+    ["Completed", r => fmtDateTime(r.completed_at)],
+    ["Activity", r => prettyActivity(r.activity)],
+    ["Duration", r => (r.duration_seconds != null ? fmtDuration(r.duration_seconds) : "—")],
+  ], training);
+
+  html += `<div class="det-sub">Sleep entries</div>`;
+  html += dataTable([
+    ["Date", r => fmtDate(r.entry_date)],
+    ["Hours", r => r.sleep_hours ?? "—"],
+    ["Quality", r => r.sleep_quality ?? "—"],
+  ], sleep);
+
+  return html;
+}
+
+function matchSummary(r) {
+  const bits = [];
+  bits.push("vs " + (r.opponent_name || "opponent") + (r.opponent_level != null ? ` (${r.opponent_level})` : ""));
+  if (r.final_score) bits.push(r.final_score);
+  if (r.perf_rating != null) bits.push("perf " + r.perf_rating);
+  return bits.join(" · ");
+}
+
+// ---------- Database tab (raw table browser) ----------
+// Order + display labels for the browsable tables.
+const TABLE_LIST = [
+  ["users", "auth.users"],
+  ["profiles", "profiles"],
+  ["logs", "logs"],
+  ["sleep_entries", "sleep_entries"],
+  ["training_sessions", "training_sessions"],
+  ["coach_players", "coach_players"],
+  ["teams", "teams"],
+  ["team_members", "team_members"],
+  ["friendships", "friendships"],
+];
+let tableData = null;    // { tableName: rows[] } from admin_tables
+let currentTable = null;
+
+async function loadTables() {
+  if (tableData) { renderTableTabs(); return; }   // already fetched
+
+  document.getElementById("table-view").innerHTML = '<div class="empty">Loading database…</div>';
+  const pass = sessionStorage.getItem(ADMIN_STORE_KEY);
+  const { data, error } = await db.rpc("admin_tables", { p_pass: pass });
+  if (error) {
+    document.getElementById("table-view").innerHTML =
+      `<div class="empty">Couldn't load the database: ${esc(error.message)}</div>`;
+    return;
+  }
+  tableData = data || {};
+  renderTableTabs();
+}
+
+function renderTableTabs() {
+  if (!currentTable) currentTable = TABLE_LIST[0][0];
+  const wrap = document.getElementById("table-tabs");
+  wrap.innerHTML = TABLE_LIST.map(([key, label]) => {
+    const n = (tableData[key] || []).length;
+    return `<button class="table-tab${key === currentTable ? " active" : ""}" data-tbl="${key}">${
+      esc(label)}<span class="tt-count">${n}</span></button>`;
+  }).join("");
+  wrap.querySelectorAll(".table-tab").forEach(b =>
+    b.addEventListener("click", () => selectTable(b.dataset.tbl)));
+  renderCurrentTable();
+}
+
+function selectTable(key) {
+  currentTable = key;
+  document.getElementById("table-search").value = "";
+  document.querySelectorAll("#table-tabs .table-tab")
+    .forEach(b => b.classList.toggle("active", b.dataset.tbl === key));
+  renderCurrentTable();
+}
+
+function renderCurrentTable() {
+  if (!tableData) return;
+  const cont = document.getElementById("table-view");
+  const rows = tableData[currentTable] || [];
+  if (!rows.length) { cont.innerHTML = '<div class="empty">This table is empty.</div>'; return; }
+
+  const q = (document.getElementById("table-search").value || "").trim().toLowerCase();
+  const filtered = q ? rows.filter(r => JSON.stringify(r).toLowerCase().includes(q)) : rows;
+  if (!filtered.length) { cont.innerHTML = '<div class="empty">No rows match that filter.</div>'; return; }
+
+  const cols = Object.keys(rows[0]);
+  cont.innerHTML =
+    `<div class="det-count">${filtered.length} of ${rows.length} row${rows.length === 1 ? "" : "s"}</div>
+     <div class="det-table-wrap"><table class="det-table">
+       <thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+       <tbody>${filtered.map(r =>
+         `<tr>${cols.map(c => `<td>${esc(cellVal(r[c]))}</td>`).join("")}</tr>`).join("")}</tbody>
+     </table></div>`;
+}
+
+function cellVal(v) {
+  if (v == null) return "—";
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
 
 // ============================================================
 // Relationship map — a small force-directed graph on a canvas.
@@ -418,6 +618,22 @@ function buildNetwork(data) {
 }
 
 // ---------- Helpers ----------
+// Generic scrollable table. `cols` is an array of [header, row => cell] pairs.
+function dataTable(cols, rows) {
+  if (!rows.length) return '<div class="hint det-hint">None.</div>';
+  return `<div class="det-table-wrap"><table class="det-table">
+    <thead><tr>${cols.map(c => `<th>${esc(c[0])}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r =>
+      `<tr>${cols.map(c => `<td>${esc(c[1](r))}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>`;
+}
+const ACTIVITY_LABEL = { box_breathing: "Box breathing", winning_point: "Winning point", ghosting: "Ghosting" };
+function prettyActivity(a) { return ACTIVITY_LABEL[a] || cap(String(a || "").replace(/_/g, " ")); }
+function fmtDuration(s) {
+  s = Math.round(s);
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+}
+
 function cap(s) { return String(s || "").charAt(0).toUpperCase() + String(s || "").slice(1); }
 function fmtNum(v) { return v == null ? "—" : String(v); }
 function fmtDate(v) { return v ? String(v).slice(0, 10) : "—"; }
