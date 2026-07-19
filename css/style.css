@@ -17,6 +17,7 @@
   --amber-dim: #b87d00;
   --green:     #3fb950;   /* success / streak alive */
   --red:       #f85149;   /* error / streak broken */
+  --blue:      #58a6ff;   /* neutral nudge */
   --radius:    10px;
   --display: 'Sora', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -420,6 +421,22 @@ input[type=range]::-moz-range-thumb {
 .chart-box.tall { height: 340px; }
 .chart-box.compact { height: 220px; }
 .empty { color: var(--ink-dim); text-align: center; padding: 30px; font-size: 14px; }
+
+/* ---------- Recommendations (Insights) ---------- */
+.rec-list { display: flex; flex-direction: column; gap: 12px; }
+.rec-card {
+  display: flex; gap: 13px; align-items: flex-start;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-left: 3px solid var(--accent, var(--line));
+  border-radius: 10px; padding: 14px 16px;
+}
+.rec-card.warn   { --accent: var(--amber); }
+.rec-card.danger { --accent: var(--red); }
+.rec-card.info   { --accent: var(--blue); }
+.rec-card.good   { --accent: var(--green); }
+.rec-icon { font-size: 22px; line-height: 1.2; flex-shrink: 0; }
+.rec-title { font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 3px; }
+.rec-body { color: var(--ink-dim); font-size: 13.5px; line-height: 1.55; }
 
 /* ============================================================
    Mobile / small screens
