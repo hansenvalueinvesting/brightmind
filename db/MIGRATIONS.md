@@ -11,6 +11,40 @@ Everything below is safe to re-run (`create or replace` / `grant`).
 
 ---
 
+## 2026-07-19 — Admin: full database visibility
+
+Covers: the admin page (`/admin`) gains a per-user **activity drill-down**
+(expanding an account now shows sign-in details, relationships, and every raw
+log / training session / sleep entry) and a new **Database** tab that browses
+every table. Two new password-gated, security-definer RPCs back these; the
+shared admin password (`BingBoingChing`) is checked inside each, and both are
+granted to `anon` (the admin visitor is usually not logged in) — same pattern
+as `admin_overview` / `admin_relationships`.
+
+**Status: NOT yet applied — run the block below in the Supabase SQL Editor**
+(Dashboard → SQL Editor → New query → Run). Until then the drill-down and the
+Database tab show "Couldn't load…". Idempotent, so safe to re-run. The full,
+authoritative definitions live at the end of `db/schema.sql`; paste them (the
+`ADMIN — FULL DATABASE VISIBILITY` section) or run the whole `schema.sql` again.
+
+The two functions added are:
+
+```sql
+-- Everything about ONE user (account + sign-in details, raw logs/training/
+-- sleep, and relationships) — backs the per-account activity drill-down.
+create or replace function public.admin_user_detail(p_pass text, p_user_id uuid) ...
+
+-- The whole database, table by table — backs the "Database" tab.
+create or replace function public.admin_tables(p_pass text) ...
+
+grant execute on function public.admin_user_detail(text, uuid) to anon, authenticated;
+grant execute on function public.admin_tables(text)            to anon, authenticated;
+```
+
+See `db/schema.sql` for the complete bodies (too long to duplicate here).
+
+---
+
 ## 2026-07 — Opponent name on match logs
 
 Covers: the match section of the daily log now also captures the **opponent's
