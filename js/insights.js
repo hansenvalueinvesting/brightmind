@@ -53,6 +53,7 @@ const REC = {
   UNDERACTIVE_MINS: 60, UNDERACTIVE_DAYS: 3, // <1h for 3+ days
   LOW_SLEEP_HOURS: 7,   LOW_SLEEP_DAYS: 3,   // <7h for 3+ days
   SORE_LEVEL: 8,        SORE_DAYS: 3,        // soreness 8+ for 3+ days
+  QUIET_DAYS: 3,        // no log/sleep in more than this many days -> nudge to log
   STALE_DAYS: 2,        // a run must reach within this many days of today to fire
 };
 
@@ -105,6 +106,21 @@ function buildRecommendations() {
   }
 
   const recs = [];
+
+  // Gone quiet — nothing logged (neither a log nor a sleep entry) in more than
+  // a few days. Shown first: when logging lapses the run-based rules below all
+  // go stale and won't fire, so this reminder rightly stands on its own.
+  const lastActivity = [...logs.map(l => l.log_date), ...sleepEntries.map(s => s.entry_date)]
+    .filter(Boolean).sort().pop() || null;
+  if (lastActivity) {
+    const gap = daysBetween(lastActivity, todayStr());
+    if (gap > REC.QUIET_DAYS) {
+      recs.push({
+        kind: "info", icon: "📝", title: "You haven't logged in a while",
+        body: `It's been ${gap} days since your last entry. These insights only work when you log regularly — take a minute to log today and keep your streak going.`,
+      });
+    }
+  }
 
   const over = trailingRun(actByDate, m => m >= REC.OVERTRAIN_MINS);
   if (over.run >= REC.OVERTRAIN_DAYS && isCurrent(over.anchor)) {
